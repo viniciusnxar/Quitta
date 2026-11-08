@@ -40,7 +40,11 @@ async function Transactions({
     <TransactionList
       first={await listTransactions(filters, null)}
       search={serialize(filters)}
-      filtered={countFilters(filters) > 0 || !!filters.q}
+      emptyText={
+        countFilters(filters) > 0 || filters.q
+          ? "Nenhuma transação encontrada com esses filtros."
+          : "Nenhuma transação ainda. Toque em + para lançar a primeira."
+      }
     />
   );
 }

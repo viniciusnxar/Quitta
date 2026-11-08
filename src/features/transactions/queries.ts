@@ -7,6 +7,14 @@ export const PAGE_SIZE = 30;
 export const cursorSchema = z.object({ date: z.iso.date(), id: z.uuid() });
 export type Cursor = z.infer<typeof cursorSchema>;
 
+// Mesmo formato em toda lista de transações, para reaproveitar TransactionList.
+const SELECT = `id, type, status, description, amount, date,
+  account:accounts!transactions_account_id_user_id_fkey(name),
+  to_account:accounts!transactions_to_account_id_user_id_fkey(name),
+  card:credit_cards!transactions_card_id_user_id_fkey(name),
+  category:categories!transactions_category_id_user_id_fkey(name, color),
+  transaction_tags(tag_id)`;
+
 /** Transações da mais recente para a mais antiga, paginadas por (date, id). */
 export async function listTransactions(
   filters: TransactionFilters,
@@ -15,14 +23,7 @@ export async function listTransactions(
   const supabase = await createClient();
   let query = supabase
     .from("transactions")
-    .select(
-      `id, type, status, description, amount, date,
-       account:accounts!transactions_account_id_user_id_fkey(name),
-       to_account:accounts!transactions_to_account_id_user_id_fkey(name),
-       card:credit_cards!transactions_card_id_user_id_fkey(name),
-       category:categories!transactions_category_id_user_id_fkey(name, color),
-       transaction_tags(tag_id)`,
-    )
+    .select(SELECT)
     .order("date", { ascending: false })
     .order("id", { ascending: false })
     .limit(PAGE_SIZE + 1);
@@ -81,3 +82,18 @@ export async function listTransactions(
 
 export type TransactionPage = Awaited<ReturnType<typeof listTransactions>>;
 export type TransactionItem = TransactionPage["items"][number];
+
+/** Itens de uma fatura (compras, estornos e pagamentos), sem paginação. */
+export async function listInvoiceItems(
+  invoiceId: string,
+): Promise<TransactionPage> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("transactions")
+    .select(SELECT)
+    .eq("invoice_id", invoiceId)
+    .order("date", { ascending: false })
+    .order("id", { ascending: false });
+  if (error) throw error;
+  return { items: data, next: null };
+}

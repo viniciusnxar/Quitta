@@ -18,12 +18,12 @@ import { TransactionActions } from "./transaction-actions";
 export function TransactionList({
   first,
   search,
-  filtered,
+  emptyText,
 }: {
   first: TransactionPage;
   /** Filtros atuais, para as próximas páginas virem com os mesmos critérios. */
   search: string;
-  filtered: boolean;
+  emptyText: string;
 }) {
   // Páginas extras pertencem à primeira página que as originou: se o servidor
   // revalidar (nova transação, filtro novo), a lista recomeça do topo.
@@ -63,11 +63,7 @@ export function TransactionList({
   const items = [first, ...pages].flatMap((p) => p.items);
   if (items.length === 0) {
     return (
-      <p className="py-12 text-center text-muted-foreground">
-        {filtered
-          ? "Nenhuma transação encontrada com esses filtros."
-          : "Nenhuma transação ainda. Toque em + para lançar a primeira."}
-      </p>
+      <p className="py-12 text-center text-muted-foreground">{emptyText}</p>
     );
   }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { CreditCardIcon, PlusIcon } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { ResponsiveDialog } from "@/components/responsive-dialog";
 import { Button } from "@/components/ui/button";
@@ -18,8 +19,7 @@ export function CardsView({
   cards: Card[];
   accounts: Account[];
 }) {
-  // undefined = fechado, null = novo cartão.
-  const [editing, setEditing] = useState<Card | null | undefined>(undefined);
+  const [creating, setCreating] = useState(false);
   const active = cards.filter((c) => !c.archived_at);
   const archived = cards.filter((c) => c.archived_at);
 
@@ -27,7 +27,7 @@ export function CardsView({
     <>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Cartões</h1>
-        <Button className="h-11 gap-2" onClick={() => setEditing(null)}>
+        <Button className="h-11 gap-2" onClick={() => setCreating(true)}>
           <PlusIcon /> Novo cartão
         </Button>
       </div>
@@ -38,7 +38,7 @@ export function CardsView({
           vencimento para as compras caírem na fatura certa.
         </p>
       ) : (
-        <CardList cards={active} onSelect={setEditing} />
+        <CardList cards={active} />
       )}
 
       {archived.length > 0 && (
@@ -46,21 +46,20 @@ export function CardsView({
           <summary className="flex min-h-11 cursor-pointer items-center text-sm text-muted-foreground">
             Arquivados ({archived.length})
           </summary>
-          <CardList cards={archived} onSelect={setEditing} />
+          <CardList cards={archived} />
         </details>
       )}
 
       <ResponsiveDialog
-        open={editing !== undefined}
-        onOpenChange={(o) => !o && setEditing(undefined)}
-        title={editing ? "Editar cartão" : "Novo cartão"}
+        open={creating}
+        onOpenChange={setCreating}
+        title="Novo cartão"
       >
-        {editing !== undefined && (
+        {creating && (
           <CardForm
-            key={editing?.id ?? "new"}
-            card={editing}
+            card={null}
             accounts={accounts}
-            onDone={() => setEditing(undefined)}
+            onDone={() => setCreating(false)}
           />
         )}
       </ResponsiveDialog>
@@ -68,21 +67,14 @@ export function CardsView({
   );
 }
 
-function CardList({
-  cards,
-  onSelect,
-}: {
-  cards: Card[];
-  onSelect: (card: Card) => void;
-}) {
+function CardList({ cards }: { cards: Card[] }) {
   return (
     <ul className="divide-y rounded-lg border">
       {cards.map((card) => (
         <li key={card.id}>
-          <button
-            type="button"
-            onClick={() => onSelect(card)}
-            className="flex min-h-16 w-full items-center gap-3 px-3 py-2 text-left hover:bg-accent"
+          <Link
+            href={`/cartoes/${card.id}`}
+            className="flex min-h-16 items-center gap-3 px-3 py-2 hover:bg-accent"
           >
             <span
               className="flex size-10 shrink-0 items-center justify-center rounded-full text-white"
@@ -117,7 +109,7 @@ function CardList({
                 {formatBRL(card.credit_limit)}
               </span>
             </span>
-          </button>
+          </Link>
         </li>
       ))}
     </ul>
