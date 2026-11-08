@@ -3,7 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { fromCents } from "@/lib/finance/money";
 import { createClient } from "@/lib/supabase/server";
+import { cursorSchema, listTransactions, type Cursor } from "./queries";
 import { transactionSchema, type TransactionInput } from "./schema";
+
+/** Próxima página da lista (rolagem infinita). */
+export async function loadMoreTransactions(cursor: Cursor) {
+  return listTransactions(cursorSchema.parse(cursor));
+}
 
 /** Opções do formulário, buscadas ao abrir para nunca ficarem velhas. */
 export async function loadTransactionOptions() {
