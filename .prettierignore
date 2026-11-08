@@ -1,3 +1,4 @@
 supabase/
 package-lock.json
 *.md
+src/components/ui/
