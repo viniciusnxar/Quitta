@@ -1,6 +1,9 @@
 import { Suspense } from "react";
 import { SubscriptionsView } from "@/components/subscriptions/subscriptions-view";
-import { listSubscriptions } from "@/features/subscriptions/queries";
+import {
+  listPriceChanges,
+  listSubscriptions,
+} from "@/features/subscriptions/queries";
 import { loadTransactionOptions } from "@/features/transactions/actions";
 
 export default function SubscriptionsPage() {
@@ -14,11 +17,18 @@ export default function SubscriptionsPage() {
 }
 
 async function Subscriptions() {
-  const [subscriptions, options] = await Promise.all([
+  const [subscriptions, priceChanges, options] = await Promise.all([
     listSubscriptions(),
+    listPriceChanges(),
     loadTransactionOptions(),
   ]);
-  return <SubscriptionsView subscriptions={subscriptions} options={options} />;
+  return (
+    <SubscriptionsView
+      subscriptions={subscriptions}
+      priceChanges={priceChanges}
+      options={options}
+    />
+  );
 }
 
 function Skeleton() {

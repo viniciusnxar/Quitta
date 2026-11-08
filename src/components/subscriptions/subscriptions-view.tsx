@@ -4,12 +4,16 @@ import { PlusIcon } from "lucide-react";
 import { useState } from "react";
 import { ResponsiveDialog } from "@/components/responsive-dialog";
 import { Button } from "@/components/ui/button";
-import type { Subscription } from "@/features/subscriptions/queries";
+import type {
+  PriceChange,
+  Subscription,
+} from "@/features/subscriptions/queries";
 import { CYCLE_LABELS } from "@/features/subscriptions/schema";
 import type { TransactionOptions } from "@/features/transactions/actions";
 import { formatDate } from "@/lib/finance/dates";
 import { formatBRL, fromCents, toCents } from "@/lib/finance/money";
 import { ProviderLogo } from "./provider-logo";
+import { SubscriptionManage } from "./subscription-manage";
 import {
   NewSubscription,
   SubscriptionForm,
@@ -20,9 +24,11 @@ const STATUS_LABELS = { pausada: "Pausada", cancelada: "Cancelada" };
 
 export function SubscriptionsView({
   subscriptions,
+  priceChanges,
   options,
 }: {
   subscriptions: Subscription[];
+  priceChanges: PriceChange[];
   options: TransactionOptions;
 }) {
   // undefined = fechado; null = nova.
@@ -88,13 +94,21 @@ export function SubscriptionsView({
           <NewSubscription options={options} onDone={close} />
         )}
         {editing && (
-          <SubscriptionForm
-            key={editing.id}
-            id={editing.id}
-            initial={subscriptionToInput(editing)}
-            options={options}
-            onDone={close}
-          />
+          <div key={editing.id} className="flex flex-col gap-2">
+            <SubscriptionForm
+              id={editing.id}
+              initial={subscriptionToInput(editing)}
+              options={options}
+              onDone={close}
+            />
+            <SubscriptionManage
+              subscription={editing}
+              priceChanges={priceChanges.filter(
+                (c) => c.subscription_id === editing.id,
+              )}
+              onDone={close}
+            />
+          </div>
         )}
       </ResponsiveDialog>
     </>

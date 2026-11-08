@@ -30,3 +30,16 @@ export async function listSubscriptions() {
 export type Subscription = Awaited<
   ReturnType<typeof listSubscriptions>
 >[number];
+
+/** Mudanças de preço por assinatura, da mais recente para a mais antiga. */
+export async function listPriceChanges() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("subscription_price_changes")
+    .select("id, subscription_id, old_amount, new_amount, changed_at")
+    .order("changed_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export type PriceChange = Awaited<ReturnType<typeof listPriceChanges>>[number];

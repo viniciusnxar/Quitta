@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { today } from "@/lib/finance/dates";
 import { fromCents } from "@/lib/finance/money";
 import { createClient } from "@/lib/supabase/server";
 import { subscriptionSchema, type SubscriptionInput } from "./schema";
@@ -40,5 +41,29 @@ export async function saveSubscription(
     return {
       error: "Assinatura salva, mas as cobranças não foram geradas agora.",
     };
+  return {};
+}
+
+/**
+ * Pausar/cancelar: o trigger apaga as cobranças futuras previstas (as pagas ficam).
+ * Reativar: volta a gerar a partir de hoje.
+ */
+export async function setSubscriptionStatus(
+  id: string,
+  status: "ativa" | "pausada" | "cancelada",
+): Promise<{ error?: string }> {
+  if (!z.uuid().safeParse(id).success) return { error: "Assinatura inválida." };
+  if (!["ativa", "pausada", "cancelada"].includes(status))
+    return { error: "Status inválido." };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("subscriptions")
+    .update({ status, end_date: status === "cancelada" ? today() : null })
+    .eq("id", id);
+  if (error) return { error: "Não foi possível atualizar a assinatura." };
+
+  if (status === "ativa") await supabase.rpc("generate_recurring");
+  revalidatePath("/", "layout");
   return {};
 }
