@@ -1,20 +1,48 @@
+import { createSerializer } from "nuqs/server";
 import { Suspense } from "react";
+import { TransactionFilters } from "@/components/transactions/transaction-filters";
 import { TransactionList } from "@/components/transactions/transaction-list";
+import { loadTransactionOptions } from "@/features/transactions/actions";
+import {
+  countFilters,
+  filterParsers,
+  loadFilters,
+} from "@/features/transactions/filters";
 import { listTransactions } from "@/features/transactions/queries";
 
-export default function TransactionsPage() {
+const serialize = createSerializer(filterParsers);
+
+export default function TransactionsPage({
+  searchParams,
+}: PageProps<"/transacoes">) {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-4">
       <h1 className="text-2xl font-semibold">Transações</h1>
+      <Suspense fallback={<div className="h-11 rounded-md bg-muted" />}>
+        <Filters />
+      </Suspense>
       <Suspense fallback={<Skeleton />}>
-        <Transactions />
+        <Transactions searchParams={searchParams} />
       </Suspense>
     </div>
   );
 }
 
-async function Transactions() {
-  return <TransactionList first={await listTransactions(null)} />;
+async function Filters() {
+  return <TransactionFilters options={await loadTransactionOptions()} />;
+}
+
+async function Transactions({
+  searchParams,
+}: Pick<PageProps<"/transacoes">, "searchParams">) {
+  const filters = loadFilters(await searchParams);
+  return (
+    <TransactionList
+      first={await listTransactions(filters, null)}
+      search={serialize(filters)}
+      filtered={countFilters(filters) > 0 || !!filters.q}
+    />
+  );
 }
 
 function Skeleton() {

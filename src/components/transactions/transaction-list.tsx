@@ -14,9 +14,18 @@ import { formatDate, today } from "@/lib/finance/dates";
 import { formatBRL, fromCents } from "@/lib/finance/money";
 import { cn } from "@/lib/utils";
 
-export function TransactionList({ first }: { first: TransactionPage }) {
+export function TransactionList({
+  first,
+  search,
+  filtered,
+}: {
+  first: TransactionPage;
+  /** Filtros atuais, para as próximas páginas virem com os mesmos critérios. */
+  search: string;
+  filtered: boolean;
+}) {
   // Páginas extras pertencem à primeira página que as originou: se o servidor
-  // revalidar (nova transação), a lista recomeça do topo.
+  // revalidar (nova transação, filtro novo), a lista recomeça do topo.
   const [more, setMore] = useState({
     base: first,
     pages: [] as TransactionPage[],
@@ -30,7 +39,7 @@ export function TransactionList({ first }: { first: TransactionPage }) {
     if (!next || pending) return;
     startTransition(async () => {
       try {
-        const page = await loadMoreTransactions(next);
+        const page = await loadMoreTransactions(search, next);
         setMore({ base: first, pages: [...pages, page] });
       } catch {
         toast.error("Não foi possível carregar mais transações.");
@@ -53,7 +62,9 @@ export function TransactionList({ first }: { first: TransactionPage }) {
   if (items.length === 0) {
     return (
       <p className="py-12 text-center text-muted-foreground">
-        Nenhuma transação ainda. Toque em + para lançar a primeira.
+        {filtered
+          ? "Nenhuma transação encontrada com esses filtros."
+          : "Nenhuma transação ainda. Toque em + para lançar a primeira."}
       </p>
     );
   }
