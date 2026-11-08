@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   title: "Quitta",
   description: "Finanças pessoais",
 };
+
+// cover: libera env(safe-area-inset-*) no iPhone.
+export const viewport: Viewport = { viewportFit: "cover" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
