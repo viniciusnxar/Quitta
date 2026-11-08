@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { z } from "zod";
 import { CardEditButton } from "@/components/cards/card-edit-button";
+import { PayInvoiceButton } from "@/components/cards/pay-invoice-button";
 import { TransactionList } from "@/components/transactions/transaction-list";
 import { listAccounts } from "@/features/accounts/queries";
 import { INVOICE_STATUS_LABELS, pickInvoice } from "@/features/cards/invoices";
@@ -55,6 +56,9 @@ async function CardDetail({
     listAccounts(),
   ]);
   if (!card) notFound();
+  const activeAccounts = accounts
+    .filter((a) => !a.archived_at)
+    .map(({ id, name }) => ({ id, name }));
   const invoice = pickInvoice(
     invoices,
     typeof fatura === "string" && isMonth(fatura) ? fatura : null,
@@ -77,12 +81,7 @@ async function CardDetail({
               : `Fecha dia ${card.closing_day} · vence dia ${card.due_day}`}
           </p>
         </div>
-        <CardEditButton
-          card={card}
-          accounts={accounts
-            .filter((a) => !a.archived_at)
-            .map(({ id, name }) => ({ id, name }))}
-        />
+        <CardEditButton card={card} accounts={activeAccounts} />
       </header>
 
       {!invoice ? (
@@ -109,7 +108,16 @@ async function CardDetail({
               </Link>
             ))}
           </nav>
-          <InvoiceSummary invoice={invoice} />
+          <InvoiceSummary invoice={invoice}>
+            {invoice.remaining > 0 && (
+              <PayInvoiceButton
+                invoiceId={invoice.id}
+                remaining={invoice.remaining}
+                accounts={activeAccounts}
+                defaultAccountId={card.payment_account_id}
+              />
+            )}
+          </InvoiceSummary>
           <TransactionList
             first={await listInvoiceItems(invoice.id)}
             search=""
@@ -121,7 +129,13 @@ async function CardDetail({
   );
 }
 
-function InvoiceSummary({ invoice: i }: { invoice: Invoice }) {
+function InvoiceSummary({
+  invoice: i,
+  children,
+}: {
+  invoice: Invoice;
+  children?: React.ReactNode;
+}) {
   return (
     <section className="flex flex-col gap-3 rounded-lg border p-4">
       <div className="flex items-center justify-between">
@@ -151,6 +165,7 @@ function InvoiceSummary({ invoice: i }: { invoice: Invoice }) {
           <p className="font-medium tabular-nums">{formatBRL(i.remaining)}</p>
         </div>
       </div>
+      {children}
     </section>
   );
 }

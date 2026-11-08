@@ -41,3 +41,15 @@ export const cardSchema = z.object({
 });
 
 export type CardInput = z.infer<typeof cardSchema>;
+
+export const payInvoiceSchema = z.object({
+  invoice_id: z.uuid(),
+  account_id: z.uuid("Escolha a conta."),
+  amount_cents: z
+    .number({ error: "Informe o valor." })
+    .int()
+    .positive("Informe o valor."),
+  date: z.iso.date("Informe a data."),
+});
+
+export type PayInvoiceInput = z.infer<typeof payInvoiceSchema>;

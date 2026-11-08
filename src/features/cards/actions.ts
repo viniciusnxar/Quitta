@@ -2,9 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { fromCents } from "@/lib/finance/money";
+import { fromCents, toCents } from "@/lib/finance/money";
 import { createClient } from "@/lib/supabase/server";
-import { cardSchema, type CardInput } from "./schema";
+import {
+  cardSchema,
+  payInvoiceSchema,
+  type CardInput,
+  type PayInvoiceInput,
+} from "./schema";
 
 type Result = { error?: string };
 
@@ -48,6 +53,34 @@ export async function setCardArchived(
     .update({ archived_at: archived ? new Date().toISOString() : null })
     .eq("id", id);
   if (error) return { error: "Não foi possível atualizar o cartão." };
+
+  revalidatePath("/", "layout");
+  return {};
+}
+
+export async function payInvoice(input: PayInvoiceInput): Promise<Result> {
+  const parsed = payInvoiceSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const { invoice_id, account_id, amount_cents, date } = parsed.data;
+
+  const supabase = await createClient();
+  const { data: invoice } = await supabase
+    .from("v_invoices")
+    .select("remaining")
+    .eq("id", invoice_id)
+    .maybeSingle();
+  if (!invoice) return { error: "Fatura não encontrada." };
+  if (amount_cents > toCents(invoice.remaining ?? 0))
+    return { error: "O valor passa do que falta pagar." };
+
+  // A função cria a transação pagamento_fatura (pago) na conta escolhida.
+  const { error } = await supabase.rpc("pay_invoice", {
+    p_invoice_id: invoice_id,
+    p_account_id: account_id,
+    p_amount: fromCents(amount_cents),
+    p_date: date,
+  });
+  if (error) return { error: "Não foi possível pagar a fatura." };
 
   revalidatePath("/", "layout");
   return {};
