@@ -49,3 +49,13 @@ export async function listInvoices(cardId: string) {
 
 export type InvoiceStatus = "aberta" | "fechada" | "vencida" | "paga";
 export type Invoice = Awaited<ReturnType<typeof listInvoices>>[number];
+
+/** Limite usado por cartão (o banco soma compras, parcelas futuras, estornos e pagamentos). */
+export async function getCardLimits() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("v_card_limits")
+    .select("id, used");
+  if (error) throw error;
+  return new Map(data.map((c) => [c.id!, c.used ?? 0]));
+}

@@ -4,12 +4,14 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { z } from "zod";
 import { CardEditButton } from "@/components/cards/card-edit-button";
+import { CardLimit } from "@/components/cards/card-limit";
 import { PayInvoiceButton } from "@/components/cards/pay-invoice-button";
 import { TransactionList } from "@/components/transactions/transaction-list";
 import { listAccounts } from "@/features/accounts/queries";
 import { INVOICE_STATUS_LABELS, pickInvoice } from "@/features/cards/invoices";
 import {
   getCard,
+  getCardLimits,
   listInvoices,
   type Invoice,
   type InvoiceStatus,
@@ -50,10 +52,11 @@ async function CardDetail({
   if (!z.uuid().safeParse(id).success) notFound();
   const { fatura } = await searchParams;
 
-  const [card, invoices, accounts] = await Promise.all([
+  const [card, invoices, accounts, limits] = await Promise.all([
     getCard(id),
     listInvoices(id),
     listAccounts(),
+    getCardLimits(),
   ]);
   if (!card) notFound();
   const activeAccounts = accounts
@@ -83,6 +86,16 @@ async function CardDetail({
         </div>
         <CardEditButton card={card} accounts={activeAccounts} />
       </header>
+
+      <section className="flex flex-col gap-2 rounded-lg border p-4">
+        <p className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Limite</span>
+          <span className="font-medium tabular-nums">
+            {formatBRL(card.credit_limit)}
+          </span>
+        </p>
+        <CardLimit used={limits.get(card.id) ?? 0} limit={card.credit_limit} />
+      </section>
 
       {!invoice ? (
         <p className="py-8 text-center text-muted-foreground">

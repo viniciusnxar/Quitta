@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { CardsView } from "@/components/cards/cards-view";
 import { listAccounts } from "@/features/accounts/queries";
-import { listCards } from "@/features/cards/queries";
+import { getCardLimits, listCards } from "@/features/cards/queries";
 
 export default function CardsPage() {
   return (
@@ -14,10 +14,14 @@ export default function CardsPage() {
 }
 
 async function Cards() {
-  const [cards, accounts] = await Promise.all([listCards(), listAccounts()]);
+  const [cards, accounts, limits] = await Promise.all([
+    listCards(),
+    listAccounts(),
+    getCardLimits(),
+  ]);
   return (
     <CardsView
-      cards={cards}
+      cards={cards.map((c) => ({ ...c, used: limits.get(c.id) ?? 0 }))}
       accounts={accounts
         .filter((a) => !a.archived_at)
         .map(({ id, name }) => ({ id, name }))}
