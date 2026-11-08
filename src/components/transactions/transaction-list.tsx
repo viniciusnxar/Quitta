@@ -13,6 +13,7 @@ import type {
 import { formatDate, today } from "@/lib/finance/dates";
 import { formatBRL, fromCents } from "@/lib/finance/money";
 import { cn } from "@/lib/utils";
+import { TransactionActions } from "./transaction-actions";
 
 export function TransactionList({
   first,
@@ -34,6 +35,7 @@ export function TransactionList({
   const next = (pages.at(-1) ?? first).next;
   const [pending, startTransition] = useTransition();
   const sentinel = useRef<HTMLDivElement>(null);
+  const [selected, setSelected] = useState<TransactionItem | null>(null);
 
   const loadMore = () => {
     if (!next || pending) return;
@@ -86,7 +88,7 @@ export function TransactionList({
           </header>
           <ul className="divide-y rounded-lg border">
             {day.items.map((t) => (
-              <Row key={t.id} transaction={t} />
+              <Row key={t.id} transaction={t} onSelect={setSelected} />
             ))}
           </ul>
         </section>
@@ -104,11 +106,22 @@ export function TransactionList({
           </Button>
         </div>
       )}
+
+      <TransactionActions
+        transaction={selected}
+        onClose={() => setSelected(null)}
+      />
     </div>
   );
 }
 
-function Row({ transaction: t }: { transaction: TransactionItem }) {
+function Row({
+  transaction: t,
+  onSelect,
+}: {
+  transaction: TransactionItem;
+  onSelect: (t: TransactionItem) => void;
+}) {
   const planned = t.status === "previsto";
   const cancelled = t.status === "cancelado";
   const cents = signedCents({ ...t, status: "pago" });
@@ -118,35 +131,41 @@ function Row({ transaction: t }: { transaction: TransactionItem }) {
       : (t.card?.name ?? t.account?.name);
 
   return (
-    <li
-      className={cn(
-        "flex min-h-14 items-center gap-3 px-3 py-2",
-        (planned || cancelled) && "opacity-60",
-      )}
-    >
-      <span
-        className="size-3 shrink-0 rounded-full"
-        style={{ backgroundColor: t.category?.color ?? "#a3a3a3" }}
-      />
-      <div className="min-w-0 flex-1">
-        <p className={cn("truncate font-medium", cancelled && "line-through")}>
-          {t.description}
-        </p>
-        <p className="flex items-center gap-1 truncate text-xs text-muted-foreground">
-          {planned && <ClockIcon className="size-3" aria-label="Previsto" />}
-          {[t.category?.name, where].filter(Boolean).join(" · ")}
-        </p>
-      </div>
-      <span
+    <li>
+      <button
+        type="button"
+        onClick={() => onSelect(t)}
         className={cn(
-          "font-medium whitespace-nowrap tabular-nums",
-          cents > 0 && "text-green-600",
-          cents < 0 && "text-red-600",
+          "flex min-h-14 w-full items-center gap-3 px-3 py-2 text-left hover:bg-accent",
+          (planned || cancelled) && "opacity-60",
         )}
       >
-        {cents > 0 && "+"}
-        {formatBRL(cents === 0 ? t.amount : fromCents(cents))}
-      </span>
+        <span
+          className="size-3 shrink-0 rounded-full"
+          style={{ backgroundColor: t.category?.color ?? "#a3a3a3" }}
+        />
+        <div className="min-w-0 flex-1">
+          <p
+            className={cn("truncate font-medium", cancelled && "line-through")}
+          >
+            {t.description}
+          </p>
+          <p className="flex items-center gap-1 truncate text-xs text-muted-foreground">
+            {planned && <ClockIcon className="size-3" aria-label="Previsto" />}
+            {[t.category?.name, where].filter(Boolean).join(" · ")}
+          </p>
+        </div>
+        <span
+          className={cn(
+            "font-medium whitespace-nowrap tabular-nums",
+            cents > 0 && "text-green-600",
+            cents < 0 && "text-red-600",
+          )}
+        >
+          {cents > 0 && "+"}
+          {formatBRL(cents === 0 ? t.amount : fromCents(cents))}
+        </span>
+      </button>
     </li>
   );
 }

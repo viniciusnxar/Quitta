@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import { today } from "@/lib/finance/dates";
 import { fromCents } from "@/lib/finance/money";
 import { createClient } from "@/lib/supabase/server";
 import { loadFilters } from "./filters";
@@ -94,6 +96,87 @@ export async function createTransaction(
     }
   }
 
+  revalidatePath("/", "layout");
+  return {};
+}
+
+const idSchema = z.uuid();
+
+/** Marca como pago (efetivado hoje) ou volta para previsto. */
+export async function setTransactionPaid(
+  id: string,
+  paid: boolean,
+): Promise<{ error?: string }> {
+  if (!idSchema.safeParse(id).success) return { error: "Transação inválida." };
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("transactions")
+    .update(
+      paid
+        ? { status: "pago", paid_at: today() }
+        : { status: "previsto", paid_at: null },
+    )
+    .eq("id", id);
+  if (error) return { error: "Não foi possível atualizar a transação." };
+  revalidatePath("/", "layout");
+  return {};
+}
+
+/** Copia a transação (com as tags) para hoje. Só tipos lançados pelo formulário. */
+export async function duplicateTransaction(
+  id: string,
+): Promise<{ error?: string }> {
+  if (!idSchema.safeParse(id).success) return { error: "Transação inválida." };
+  const supabase = await createClient();
+  const { data: t } = await supabase
+    .from("transactions")
+    .select(
+      "type, status, description, amount, account_id, to_account_id, card_id, category_id, notes, transaction_tags(tag_id)",
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (!t) return { error: "Transação não encontrada." };
+  if (!["receita", "despesa", "transferencia"].includes(t.type))
+    return { error: "Este tipo de lançamento não pode ser duplicado." };
+
+  const { transaction_tags, status, ...copy } = t;
+  // Vínculos de parcela/assinatura/fatura não são copiados; o trigger recalcula a fatura.
+  const { data: created, error } = await supabase
+    .from("transactions")
+    .insert({
+      ...copy,
+      status: status === "cancelado" ? "pago" : status,
+      date: today(),
+    })
+    .select("id")
+    .single();
+  if (error) return { error: "Não foi possível duplicar a transação." };
+
+  if (transaction_tags.length > 0) {
+    const { error: tagError } = await supabase.from("transaction_tags").insert(
+      transaction_tags.map(({ tag_id }) => ({
+        transaction_id: created.id,
+        tag_id,
+      })),
+    );
+    if (tagError) {
+      await supabase.from("transactions").delete().eq("id", created.id);
+      return { error: "Não foi possível duplicar as tags." };
+    }
+  }
+
+  revalidatePath("/", "layout");
+  return {};
+}
+
+export async function deleteTransaction(
+  id: string,
+): Promise<{ error?: string }> {
+  if (!idSchema.safeParse(id).success) return { error: "Transação inválida." };
+  const supabase = await createClient();
+  // transaction_tags cai junto (on delete cascade).
+  const { error } = await supabase.from("transactions").delete().eq("id", id);
+  if (error) return { error: "Não foi possível excluir a transação." };
   revalidatePath("/", "layout");
   return {};
 }
