@@ -2,6 +2,7 @@ import {
   ChevronRightIcon,
   LandmarkIcon,
   LayersIcon,
+  RepeatIcon,
   TagsIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -9,6 +10,7 @@ import Link from "next/link";
 const LINKS = [
   { href: "/contas", label: "Contas", icon: LandmarkIcon },
   { href: "/parcelamentos", label: "Parcelamentos", icon: LayersIcon },
+  { href: "/assinaturas", label: "Assinaturas", icon: RepeatIcon },
   { href: "/categorias", label: "Categorias e tags", icon: TagsIcon },
 ];
 

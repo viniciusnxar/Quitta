@@ -10,6 +10,7 @@ import {
 import { Suspense, use, useState, type ReactElement } from "react";
 import { InstallmentForm } from "@/components/installments/installment-form";
 import { ResponsiveDialog } from "@/components/responsive-dialog";
+import { NewSubscription } from "@/components/subscriptions/subscription-form";
 import { TransactionForm } from "@/components/transactions/transaction-form";
 import {
   Drawer,
@@ -24,7 +25,7 @@ import {
 } from "@/features/transactions/actions";
 import type { FormType } from "@/features/transactions/schema";
 
-type FabType = FormType | "parcelado";
+type FabType = FormType | "parcelado" | "assinatura";
 
 const OPTIONS: {
   label: string;
@@ -35,8 +36,7 @@ const OPTIONS: {
   { label: "Receita", icon: ArrowUpIcon, type: "receita" },
   { label: "Transferência", icon: ArrowLeftRightIcon, type: "transferencia" },
   { label: "Compra parcelada", icon: LayersIcon, type: "parcelado" },
-  // Sem tipo = ainda não existe (commit 25).
-  { label: "Assinatura", icon: RepeatIcon },
+  { label: "Assinatura", icon: RepeatIcon, type: "assinatura" },
 ];
 
 type Opening = { type: FabType; options: Promise<TransactionOptions | null> };
@@ -88,7 +88,11 @@ export function FabNew({ trigger }: { trigger: ReactElement }) {
         open={!!opening}
         onOpenChange={(o) => !o && close()}
         title={
-          opening?.type === "parcelado" ? "Compra parcelada" : "Novo lançamento"
+          opening?.type === "parcelado"
+            ? "Compra parcelada"
+            : opening?.type === "assinatura"
+              ? "Nova assinatura"
+              : "Novo lançamento"
         }
       >
         {opening && (
@@ -119,6 +123,8 @@ function LoadedForm({
         Não foi possível carregar suas contas. Tente de novo.
       </p>
     );
+  if (opening.type === "assinatura")
+    return <NewSubscription options={options} onDone={onDone} />;
   return opening.type === "parcelado" ? (
     <InstallmentForm options={options} onDone={onDone} />
   ) : (
