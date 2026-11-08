@@ -1,5 +1,6 @@
-import { BottomNav } from "@/components/layout/bottom-nav";
-import { Sidebar } from "@/components/layout/sidebar";
+import { Suspense } from "react";
+import { BottomNav, BottomNavView } from "@/components/layout/bottom-nav";
+import { Sidebar, SidebarView } from "@/components/layout/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/features/auth/actions";
@@ -7,7 +8,9 @@ import { logout } from "@/features/auth/actions";
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-1">
-      <Sidebar />
+      <Suspense fallback={<SidebarView pathname="" />}>
+        <Sidebar />
+      </Suspense>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex min-h-14 items-center justify-between border-b bg-background px-4 pt-[env(safe-area-inset-top)]">
           <span className="text-lg font-semibold md:invisible">Quitta</span>
@@ -25,7 +28,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
-      <BottomNav />
+      <Suspense fallback={<BottomNavView pathname="" />}>
+        <BottomNav />
+      </Suspense>
     </div>
   );
 }

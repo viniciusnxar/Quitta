@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { AccountsView } from "@/components/accounts/accounts-view";
-import { listAccounts } from "@/features/accounts/queries";
+import { getBalances, listAccounts } from "@/features/accounts/queries";
 
 export default function AccountsPage() {
   return (
@@ -13,8 +13,18 @@ export default function AccountsPage() {
 }
 
 async function Accounts() {
-  const accounts = await listAccounts();
-  return <AccountsView accounts={accounts} />;
+  const [accounts, balances] = await Promise.all([
+    listAccounts(),
+    getBalances(),
+  ]);
+  return (
+    <AccountsView
+      accounts={accounts.map((a) => ({
+        ...a,
+        balance: balances.get(a.id)?.balance ?? a.initial_balance,
+      }))}
+    />
+  );
 }
 
 function AccountsSkeleton() {

@@ -1,6 +1,7 @@
 "use client";
 
 import { PlusIcon } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { ResponsiveDialog } from "@/components/responsive-dialog";
 import { Button } from "@/components/ui/button";
@@ -10,9 +11,10 @@ import { formatBRL } from "@/lib/finance/money";
 import { AccountForm } from "./account-form";
 import { AccountIcon } from "./account-icon";
 
-export function AccountsView({ accounts }: { accounts: Account[] }) {
-  // undefined = fechado · null = nova conta · Account = editando
-  const [editing, setEditing] = useState<Account | null | undefined>();
+type AccountWithBalance = Account & { balance: number };
+
+export function AccountsView({ accounts }: { accounts: AccountWithBalance[] }) {
+  const [creating, setCreating] = useState(false);
   const active = accounts.filter((a) => !a.archived_at);
   const archived = accounts.filter((a) => a.archived_at);
 
@@ -20,7 +22,7 @@ export function AccountsView({ accounts }: { accounts: Account[] }) {
     <>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Contas</h1>
-        <Button className="h-11 gap-2" onClick={() => setEditing(null)}>
+        <Button className="h-11 gap-2" onClick={() => setCreating(true)}>
           <PlusIcon /> Nova conta
         </Button>
       </div>
@@ -31,50 +33,39 @@ export function AccountsView({ accounts }: { accounts: Account[] }) {
           VR...
         </p>
       ) : (
-        <AccountList accounts={active} onSelect={setEditing} />
+        <AccountList accounts={active} />
       )}
 
       {archived.length > 0 && (
-        <details className="group">
+        <details>
           <summary className="flex min-h-11 cursor-pointer items-center text-sm text-muted-foreground">
             Arquivadas ({archived.length})
           </summary>
-          <AccountList accounts={archived} onSelect={setEditing} />
+          <AccountList accounts={archived} />
         </details>
       )}
 
       <ResponsiveDialog
-        open={editing !== undefined}
-        onOpenChange={(open) => !open && setEditing(undefined)}
-        title={editing ? "Editar conta" : "Nova conta"}
+        open={creating}
+        onOpenChange={setCreating}
+        title="Nova conta"
       >
-        {editing !== undefined && (
-          <AccountForm
-            key={editing?.id ?? "new"}
-            account={editing}
-            onDone={() => setEditing(undefined)}
-          />
+        {creating && (
+          <AccountForm account={null} onDone={() => setCreating(false)} />
         )}
       </ResponsiveDialog>
     </>
   );
 }
 
-function AccountList({
-  accounts,
-  onSelect,
-}: {
-  accounts: Account[];
-  onSelect: (account: Account) => void;
-}) {
+function AccountList({ accounts }: { accounts: AccountWithBalance[] }) {
   return (
     <ul className="divide-y rounded-lg border">
       {accounts.map((account) => (
         <li key={account.id}>
-          <button
-            type="button"
-            onClick={() => onSelect(account)}
-            className="flex min-h-16 w-full items-center gap-3 px-3 py-2 text-left hover:bg-accent"
+          <Link
+            href={`/contas/${account.id}`}
+            className="flex min-h-16 items-center gap-3 px-3 py-2 hover:bg-accent"
           >
             <AccountIcon icon={account.icon} color={account.color} />
             <span className="flex min-w-0 flex-1 flex-col">
@@ -85,13 +76,16 @@ function AccountList({
                   .join(" · ")}
               </span>
             </span>
-            <span className="text-right text-sm tabular-nums">
-              <span className="block text-xs text-muted-foreground">
-                Saldo inicial
-              </span>
-              {formatBRL(account.initial_balance)}
+            <span
+              className={
+                account.balance < 0
+                  ? "font-medium text-red-600 tabular-nums"
+                  : "font-medium tabular-nums"
+              }
+            >
+              {formatBRL(account.balance)}
             </span>
-          </button>
+          </Link>
         </li>
       ))}
     </ul>

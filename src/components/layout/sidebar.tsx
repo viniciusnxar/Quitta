@@ -8,8 +8,11 @@ import { FabNew } from "./fab-new";
 import { isActive, NAV_ITEMS } from "./nav-items";
 
 export function Sidebar() {
-  const pathname = usePathname();
+  return <SidebarView pathname={usePathname()} />;
+}
 
+/** Sem hook: serve de fallback do <Suspense> (pathname "" = nenhum item ativo). */
+export function SidebarView({ pathname }: { pathname: string }) {
   return (
     <aside className="sticky top-0 hidden h-dvh w-56 shrink-0 flex-col gap-4 border-r p-4 md:flex">
       <span className="px-2 text-xl font-semibold">Quitta</span>

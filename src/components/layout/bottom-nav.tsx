@@ -8,7 +8,11 @@ import { FabNew } from "./fab-new";
 import { isActive, NAV_ITEMS } from "./nav-items";
 
 export function BottomNav() {
-  const pathname = usePathname();
+  return <BottomNavView pathname={usePathname()} />;
+}
+
+/** Sem hook: serve de fallback do <Suspense> (pathname "" = nenhum item ativo). */
+export function BottomNavView({ pathname }: { pathname: string }) {
   const [first, second, ...rest] = NAV_ITEMS;
 
   const item = ({ href, label, icon: Icon }: (typeof NAV_ITEMS)[number]) => (

@@ -28,7 +28,7 @@ export async function saveAccount(
     : await supabase.from("accounts").insert(row);
   if (error) return { error: "Não foi possível salvar a conta." };
 
-  revalidatePath("/contas");
+  revalidatePath("/contas", "layout");
   return {};
 }
 
@@ -43,6 +43,6 @@ export async function setAccountArchived(
     .eq("id", id);
   if (error) return { error: "Não foi possível atualizar a conta." };
 
-  revalidatePath("/contas");
+  revalidatePath("/contas", "layout");
   return {};
 }
