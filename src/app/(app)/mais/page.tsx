@@ -1,5 +1,6 @@
 import {
   ChevronRightIcon,
+  HomeIcon,
   LandmarkIcon,
   LayersIcon,
   RepeatIcon,
@@ -11,6 +12,7 @@ const LINKS = [
   { href: "/contas", label: "Contas", icon: LandmarkIcon },
   { href: "/parcelamentos", label: "Parcelamentos", icon: LayersIcon },
   { href: "/assinaturas", label: "Assinaturas", icon: RepeatIcon },
+  { href: "/financiamentos", label: "Financiamentos", icon: HomeIcon },
   { href: "/categorias", label: "Categorias e tags", icon: TagsIcon },
 ];
 
