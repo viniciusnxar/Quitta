@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PALETTE } from "@/lib/palette";
 import { Constants } from "@/lib/supabase/database.types";
 
 export const ACCOUNT_TYPE_LABELS: Record<
@@ -12,18 +13,6 @@ export const ACCOUNT_TYPE_LABELS: Record<
   beneficio: "Benefício (VR/VA)",
   outro: "Outro",
 };
-
-export const ACCOUNT_COLORS = [
-  "#16a34a",
-  "#0891b2",
-  "#2563eb",
-  "#7c3aed",
-  "#db2777",
-  "#dc2626",
-  "#ea580c",
-  "#ca8a04",
-  "#525252",
-] as const;
 
 export const ACCOUNT_ICONS = [
   "landmark",
@@ -50,7 +39,7 @@ export const accountSchema = z.object({
     .int()
     .min(0),
   initial_balance_date: z.iso.date("Data inválida."),
-  color: z.enum(ACCOUNT_COLORS),
+  color: z.enum(PALETTE),
   icon: z.enum(ACCOUNT_ICONS),
   include_in_total: z.boolean(),
 });

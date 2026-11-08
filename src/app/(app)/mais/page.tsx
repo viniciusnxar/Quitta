@@ -1,7 +1,10 @@
-import { ChevronRightIcon, LandmarkIcon } from "lucide-react";
+import { ChevronRightIcon, LandmarkIcon, TagsIcon } from "lucide-react";
 import Link from "next/link";
 
-const LINKS = [{ href: "/contas", label: "Contas", icon: LandmarkIcon }];
+const LINKS = [
+  { href: "/contas", label: "Contas", icon: LandmarkIcon },
+  { href: "/categorias", label: "Categorias e tags", icon: TagsIcon },
+];
 
 export default function MorePage() {
   return (

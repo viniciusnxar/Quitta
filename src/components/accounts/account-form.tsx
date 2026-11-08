@@ -4,6 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { ColorPicker } from "@/components/color-picker";
+import { FieldError } from "@/components/field-error";
 import { MoneyInput } from "@/components/money/money-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +19,6 @@ import {
 import { saveAccount, setAccountArchived } from "@/features/accounts/actions";
 import type { Account } from "@/features/accounts/queries";
 import {
-  ACCOUNT_COLORS,
   ACCOUNT_ICONS,
   ACCOUNT_TYPE_LABELS,
   accountSchema,
@@ -25,6 +26,7 @@ import {
 } from "@/features/accounts/schema";
 import { today } from "@/lib/finance/dates";
 import { toCents } from "@/lib/finance/money";
+import { PALETTE } from "@/lib/palette";
 import { cn } from "@/lib/utils";
 import { ACCOUNT_ICON_COMPONENTS } from "./account-icon";
 
@@ -36,7 +38,7 @@ function defaults(account: Account | null): AccountInput {
       type: "corrente",
       initial_balance_cents: 0,
       initial_balance_date: today(),
-      color: ACCOUNT_COLORS[0],
+      color: PALETTE[0],
       icon: ACCOUNT_ICONS[0],
       include_in_total: true,
     };
@@ -49,7 +51,7 @@ function defaults(account: Account | null): AccountInput {
     type: account.type,
     initial_balance_cents: toCents(account.initial_balance),
     initial_balance_date: account.initial_balance_date,
-    color: pick(ACCOUNT_COLORS, account.color),
+    color: pick(PALETTE, account.color),
     icon: pick(ACCOUNT_ICONS, account.icon),
     include_in_total: account.include_in_total,
   };
@@ -165,28 +167,13 @@ export function AccountForm({
         </label>
       </div>
 
-      <fieldset className="flex flex-col gap-1.5">
-        <legend className="mb-1.5 text-sm font-medium">Cor</legend>
-        <Controller
-          control={control}
-          name="color"
-          render={({ field }) => (
-            <div className="flex flex-wrap gap-2">
-              {ACCOUNT_COLORS.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  aria-label={`Cor ${color}`}
-                  aria-pressed={field.value === color}
-                  onClick={() => field.onChange(color)}
-                  className="size-11 rounded-full ring-offset-2 ring-offset-background aria-pressed:ring-2 aria-pressed:ring-foreground"
-                  style={{ backgroundColor: color }}
-                />
-              ))}
-            </div>
-          )}
-        />
-      </fieldset>
+      <Controller
+        control={control}
+        name="color"
+        render={({ field }) => (
+          <ColorPicker value={field.value} onChange={field.onChange} />
+        )}
+      />
 
       <fieldset className="flex flex-col gap-1.5">
         <legend className="mb-1.5 text-sm font-medium">Ícone</legend>
@@ -248,14 +235,5 @@ export function AccountForm({
         </Button>
       )}
     </form>
-  );
-}
-
-function FieldError({ message }: { message?: string }) {
-  if (!message) return null;
-  return (
-    <span role="alert" className="text-xs font-normal text-destructive">
-      {message}
-    </span>
   );
 }
