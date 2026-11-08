@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
+  addMonths,
   currentMonth,
   formatDate,
   formatMonth,
@@ -15,6 +16,12 @@ describe("dates", () => {
     const now = new Date("2026-12-01T02:00:00Z");
     expect(today(now)).toBe("2026-11-30");
     expect(currentMonth(now)).toBe("2026-11");
+  });
+
+  test("addMonths limita ao fim do mês, como o Postgres", () => {
+    expect(addMonths("2026-01-31", 1)).toBe("2026-02-28");
+    expect(addMonths("2028-01-31", 1)).toBe("2028-02-29");
+    expect(addMonths("2026-11-15", 3)).toBe("2027-02-15");
   });
 
   test("shiftMonth atravessa anos", () => {

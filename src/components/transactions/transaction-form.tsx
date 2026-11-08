@@ -29,6 +29,7 @@ import {
 } from "@/features/transactions/schema";
 import { today } from "@/lib/finance/dates";
 import { cn } from "@/lib/utils";
+import { categoryItems } from "@/features/categories/items";
 
 const NONE = "none";
 const labelClass = "flex flex-col gap-1.5 text-sm font-medium";
@@ -90,14 +91,10 @@ export function TransactionForm({
       cards.map((c) => [`card:${c.id}`, `${c.name} (cartão)`]),
     ),
   };
-  const categoryItems: Record<string, string> = { [NONE]: "Sem categoria" };
-  for (const root of categories.filter(
-    (c) => c.kind === currentType && !c.parent_id,
-  )) {
-    categoryItems[root.id] = root.name;
-    for (const sub of categories.filter((c) => c.parent_id === root.id))
-      categoryItems[sub.id] = `${root.name} › ${sub.name}`;
-  }
+  const categoryOptions = {
+    [NONE]: "Sem categoria",
+    ...categoryItems(categories, currentType),
+  };
 
   const onSubmit = handleSubmit((values) =>
     startTransition(async () => {
@@ -240,7 +237,7 @@ export function TransactionForm({
             name="category_id"
             render={({ field }) => (
               <Select
-                items={categoryItems}
+                items={categoryOptions}
                 value={field.value ?? NONE}
                 onValueChange={(v) => field.onChange(v === NONE ? null : v)}
               >
@@ -248,7 +245,7 @@ export function TransactionForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(categoryItems).map(([value, label]) => (
+                  {Object.entries(categoryOptions).map(([value, label]) => (
                     <SelectItem key={value} value={value}>
                       {label}
                     </SelectItem>

@@ -44,6 +44,16 @@ export function monthBounds(month: string): { start: string; end: string } {
   };
 }
 
+/**
+ * Soma meses mantendo o dia, limitado ao fim do mês (igual ao `date + interval 'n month'`
+ * do Postgres): "2026-01-31" + 1 → "2026-02-28".
+ */
+export function addMonths(date: string, months: number): string {
+  const month = shiftMonth(date.slice(0, 7), months);
+  const day = Math.min(Number(date.slice(8, 10)), daysInMonth(month));
+  return `${month}-${String(day).padStart(2, "0")}`;
+}
+
 // Meio-dia local: o dia não muda em nenhum fuso ao formatar.
 function toLocalDate(date: string): Date {
   const [y, m, d] = date.split("-").map(Number);

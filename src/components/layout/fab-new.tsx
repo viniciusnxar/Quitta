@@ -8,6 +8,7 @@ import {
   RepeatIcon,
 } from "lucide-react";
 import { Suspense, use, useState, type ReactElement } from "react";
+import { InstallmentForm } from "@/components/installments/installment-form";
 import { ResponsiveDialog } from "@/components/responsive-dialog";
 import { TransactionForm } from "@/components/transactions/transaction-form";
 import {
@@ -23,20 +24,22 @@ import {
 } from "@/features/transactions/actions";
 import type { FormType } from "@/features/transactions/schema";
 
+type FabType = FormType | "parcelado";
+
 const OPTIONS: {
   label: string;
   icon: typeof ArrowDownIcon;
-  type?: FormType;
+  type?: FabType;
 }[] = [
   { label: "Despesa", icon: ArrowDownIcon, type: "despesa" },
   { label: "Receita", icon: ArrowUpIcon, type: "receita" },
   { label: "Transferência", icon: ArrowLeftRightIcon, type: "transferencia" },
-  // Sem tipo = ainda não existe (commits 22 e 25).
-  { label: "Compra parcelada", icon: LayersIcon },
+  { label: "Compra parcelada", icon: LayersIcon, type: "parcelado" },
+  // Sem tipo = ainda não existe (commit 25).
   { label: "Assinatura", icon: RepeatIcon },
 ];
 
-type Opening = { type: FormType; options: Promise<TransactionOptions | null> };
+type Opening = { type: FabType; options: Promise<TransactionOptions | null> };
 
 export function FabNew({ trigger }: { trigger: ReactElement }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -84,7 +87,9 @@ export function FabNew({ trigger }: { trigger: ReactElement }) {
       <ResponsiveDialog
         open={!!opening}
         onOpenChange={(o) => !o && close()}
-        title="Novo lançamento"
+        title={
+          opening?.type === "parcelado" ? "Compra parcelada" : "Novo lançamento"
+        }
       >
         {opening && (
           <Suspense
@@ -114,7 +119,9 @@ function LoadedForm({
         Não foi possível carregar suas contas. Tente de novo.
       </p>
     );
-  return (
+  return opening.type === "parcelado" ? (
+    <InstallmentForm options={options} onDone={onDone} />
+  ) : (
     <TransactionForm type={opening.type} options={options} onDone={onDone} />
   );
 }
