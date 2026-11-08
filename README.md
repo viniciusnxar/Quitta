@@ -14,7 +14,7 @@ Requer Node.js 20+.
 
 ```bash
 npm install
-cp .env.example .env.local   # preencha com os dados do seu projeto Supabase
+# crie um .env com as variáveis abaixo (seção Supabase)
 npm run dev                  # http://localhost:3000
 ```
 
@@ -32,10 +32,11 @@ npm run dev                  # http://localhost:3000
 O banco é só o projeto na nuvem — não há Supabase local.
 
 1. Crie um projeto em [supabase.com](https://supabase.com) e copie a URL e a chave publishable
-   (ou anon) para `.env.local`:
+   (ou anon) para `.env`:
    ```
-   NEXT_PUBLIC_SUPABASE_URL=
-   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+   SUPABASE_URL=
+   SUPABASE_PUBLISHABLE_KEY=
+   SITE_URL=http://localhost:3000
    ```
    Nunca use a service_role/secret key no app.
 2. Aplique as migrations e gere os tipos:

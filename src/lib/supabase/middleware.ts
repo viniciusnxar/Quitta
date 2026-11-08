@@ -8,8 +8,8 @@ export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_PUBLISHABLE_KEY!,
     {
       cookies: {
         getAll() {
@@ -38,9 +38,12 @@ export async function updateSession(request: NextRequest) {
     (p) => pathname === p || pathname.startsWith(`${p}/`),
   );
 
-  if (!data?.claims && !isPublic) {
+  const isAuthPage = pathname === "/login" || pathname === "/cadastro";
+  const target = !data?.claims && !isPublic ? "/login" : data?.claims && isAuthPage ? "/" : null;
+
+  if (target) {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
+    url.pathname = target;
     url.search = "";
     return NextResponse.redirect(url);
   }
