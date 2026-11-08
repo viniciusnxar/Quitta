@@ -16,7 +16,7 @@ import {
   type Invoice,
   type InvoiceStatus,
 } from "@/features/cards/queries";
-import { listInvoiceItems } from "@/features/transactions/queries";
+import { listTransactionsOf } from "@/features/transactions/queries";
 import { formatDate, isMonth } from "@/lib/finance/dates";
 import { formatBRL } from "@/lib/finance/money";
 import { cn } from "@/lib/utils";
@@ -132,7 +132,7 @@ async function CardDetail({
             )}
           </InvoiceSummary>
           <TransactionList
-            first={await listInvoiceItems(invoice.id)}
+            first={await listTransactionsOf("invoice_id", invoice.id)}
             search=""
             emptyText="Fatura sem lançamentos."
           />

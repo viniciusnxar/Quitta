@@ -1,3 +1,4 @@
+import { ProgressBar } from "@/components/progress-bar";
 import { formatBRL } from "@/lib/finance/money";
 import { cn } from "@/lib/utils";
 
@@ -8,27 +9,14 @@ export function CardLimit({ used, limit }: { used: number; limit: number }) {
 
   return (
     <div className="flex flex-col gap-1.5">
-      <div
-        role="progressbar"
-        aria-label="Limite usado"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={Math.min(Math.max(pct, 0), 100)}
-        aria-valuetext={`${pct}% do limite usado`}
-        className="h-2 overflow-hidden rounded-full bg-muted"
-      >
-        <div
-          className={cn(
-            "h-full rounded-full",
-            pct < 70
-              ? "bg-green-600"
-              : pct < 90
-                ? "bg-amber-500"
-                : "bg-red-600",
-          )}
-          style={{ width: `${Math.min(Math.max(pct, 0), 100)}%` }}
-        />
-      </div>
+      <ProgressBar
+        pct={pct}
+        label="Limite usado"
+        valueText={`${pct}% do limite usado`}
+        className={
+          pct < 70 ? "bg-green-600" : pct < 90 ? "bg-amber-500" : "bg-red-600"
+        }
+      />
       <div className="flex justify-between gap-2 text-xs text-muted-foreground tabular-nums">
         <span>
           Usado {formatBRL(used)} ({pct}%)

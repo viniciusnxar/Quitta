@@ -83,15 +83,16 @@ export async function listTransactions(
 export type TransactionPage = Awaited<ReturnType<typeof listTransactions>>;
 export type TransactionItem = TransactionPage["items"][number];
 
-/** Itens de uma fatura (compras, estornos e pagamentos), sem paginação. */
-export async function listInvoiceItems(
-  invoiceId: string,
+/** Itens de uma fatura ou parcelas de um parcelamento, sem paginação. */
+export async function listTransactionsOf(
+  column: "invoice_id" | "installment_plan_id",
+  id: string,
 ): Promise<TransactionPage> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("transactions")
     .select(SELECT)
-    .eq("invoice_id", invoiceId)
+    .eq(column, id)
     .order("date", { ascending: false })
     .order("id", { ascending: false });
   if (error) throw error;

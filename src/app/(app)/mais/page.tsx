@@ -1,8 +1,14 @@
-import { ChevronRightIcon, LandmarkIcon, TagsIcon } from "lucide-react";
+import {
+  ChevronRightIcon,
+  LandmarkIcon,
+  LayersIcon,
+  TagsIcon,
+} from "lucide-react";
 import Link from "next/link";
 
 const LINKS = [
   { href: "/contas", label: "Contas", icon: LandmarkIcon },
+  { href: "/parcelamentos", label: "Parcelamentos", icon: LayersIcon },
   { href: "/categorias", label: "Categorias e tags", icon: TagsIcon },
 ];
 
