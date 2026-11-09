@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import {
   changeEmail,
   changePassword,
+  deleteAccount,
   removeAvatar,
   updateProfile,
   uploadAvatar,
@@ -244,6 +245,63 @@ export function ChangePasswordForm({ onDone }: { onDone: () => void }) {
       <FieldError message={error} />
       <Button type="submit" className="h-11" disabled={pending}>
         {pending ? "Salvando..." : "Alterar senha"}
+      </Button>
+    </form>
+  );
+}
+
+export function DeleteAccountForm({ profile }: { profile: Profile }) {
+  const [pending, startTransition] = useTransition();
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState<string>();
+  const matches = email.trim().toLowerCase() === profile.email.toLowerCase();
+
+  return (
+    <form
+      className="flex flex-col gap-4 pb-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!matches) return;
+        startTransition(async () => {
+          // Em caso de sucesso a action redireciona para o login.
+          const r = await deleteAccount({ email });
+          if (r?.error) setError(r.error);
+        });
+      }}
+    >
+      <p className="text-sm">
+        Isso exclui <strong>definitivamente</strong> sua conta e todos os dados:
+        contas, cartões, transações, parcelamentos, assinaturas, financiamentos,
+        investimentos e mensagens. <strong>Não dá para desfazer.</strong>
+      </p>
+      <label className={labelClass}>
+        <span>
+          Para confirmar, digite seu e-mail:{" "}
+          <span className="font-normal text-muted-foreground">
+            {profile.email}
+          </span>
+        </span>
+        <Input
+          type="email"
+          inputMode="email"
+          autoComplete="off"
+          className="h-11 text-base"
+          value={email}
+          aria-invalid={!!error}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setError(undefined);
+          }}
+        />
+        <FieldError message={error} />
+      </label>
+      <Button
+        type="submit"
+        variant="destructive"
+        className="h-11"
+        disabled={!matches || pending}
+      >
+        {pending ? "Excluindo..." : "Excluir minha conta"}
       </Button>
     </form>
   );

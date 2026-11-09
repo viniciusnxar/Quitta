@@ -1735,6 +1735,7 @@ export type Database = {
     }
     Functions: {
       clamp_day: { Args: { p_day: number; p_month: string }; Returns: string }
+      delete_my_account: { Args: never; Returns: undefined }
       delete_sample_data: { Args: never; Returns: number }
       create_installment_plan: {
         Args: {

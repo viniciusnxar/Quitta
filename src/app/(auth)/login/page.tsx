@@ -7,9 +7,14 @@ import { Field, FormMessage, SubmitButton } from "@/components/auth/field";
 
 export default function LoginPage({ searchParams }: PageProps<"/login">) {
   const [state, action, pending] = useActionState(login, {});
+  const params = use(searchParams);
   const linkError =
-    use(searchParams).erro === "link"
+    params.erro === "link"
       ? "Link inválido ou expirado. Entre ou cadastre-se de novo."
+      : undefined;
+  const deleted =
+    params.conta === "excluida" && !state.error
+      ? "Sua conta e todos os dados foram excluídos."
       : undefined;
 
   return (
@@ -28,7 +33,7 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
         type="password"
         autoComplete="current-password"
       />
-      <FormMessage error={state.error ?? linkError} />
+      <FormMessage error={state.error ?? linkError} message={deleted} />
       <SubmitButton pending={pending}>Entrar</SubmitButton>
       <p className="text-center text-sm">
         Não tem conta?{" "}

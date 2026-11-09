@@ -5,6 +5,7 @@ import {
   KeyRoundIcon,
   LogOutIcon,
   MailIcon,
+  UserXIcon,
   UserPenIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -24,6 +25,7 @@ import { ProfileAvatar } from "./profile-avatar";
 import {
   ChangeEmailForm,
   ChangePasswordForm,
+  DeleteAccountForm,
   EditProfileForm,
 } from "./profile-forms";
 
@@ -31,6 +33,7 @@ const TITLES = {
   perfil: "Editar perfil",
   email: "Alterar e-mail",
   senha: "Alterar senha",
+  excluir: "Excluir conta",
 } as const;
 type Dialog = keyof typeof TITLES;
 
@@ -101,6 +104,13 @@ export function ProfileMenu({ profile }: { profile: Profile }) {
           <DropdownMenuItem
             variant="destructive"
             className="h-11"
+            onClick={() => setDialog("excluir")}
+          >
+            <UserXIcon /> Excluir conta
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            variant="destructive"
+            className="h-11"
             disabled={pending}
             onClick={() => startTransition(() => logout())}
           >
@@ -121,6 +131,7 @@ export function ProfileMenu({ profile }: { profile: Profile }) {
           <ChangeEmailForm profile={profile} onDone={close} />
         )}
         {dialog === "senha" && <ChangePasswordForm onDone={close} />}
+        {dialog === "excluir" && <DeleteAccountForm profile={profile} />}
       </ResponsiveDialog>
     </>
   );

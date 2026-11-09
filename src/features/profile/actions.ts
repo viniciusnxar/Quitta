@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import {
   AVATAR_MAX_BYTES,
@@ -142,4 +143,24 @@ export async function changePassword(input: {
           : "Não foi possível alterar a senha.",
     };
   return { message: "Senha alterada." };
+}
+
+/** Exclui a conta e todos os dados. Exige digitar o próprio e-mail. */
+export async function deleteAccount(input: { email: string }): Promise<Result> {
+  const { supabase, claims } = await session();
+  if (!claims?.email) return { error: "Sessão expirada." };
+  if (input.email.trim().toLowerCase() !== claims.email.toLowerCase())
+    return { error: "O e-mail digitado não confere." };
+
+  // Fotos primeiro: o Storage não apaga arquivos em cascata.
+  const bucket = supabase.storage.from("avatars");
+  const { data: files } = await bucket.list(claims.sub);
+  if (files?.length)
+    await bucket.remove(files.map((f) => `${claims.sub}/${f.name}`));
+
+  const { error } = await supabase.rpc("delete_my_account");
+  if (error)
+    return { error: "Não foi possível excluir a conta. Tente de novo." };
+  await supabase.auth.signOut();
+  redirect("/login?conta=excluida");
 }
