@@ -1,3 +1,4 @@
+import { getDashboard } from "@/features/dashboard/queries";
 import { toCents } from "@/lib/finance/money";
 import { createClient } from "@/lib/supabase/server";
 import { rollupToRoots } from "./resolve";
@@ -13,14 +14,8 @@ export async function listBudgets() {
 
 /** Gasto global do mês (mesma conta do dashboard: realizado e com previstos). */
 export async function getMonthSpending(month: string) {
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc("get_dashboard", {
-    p_month: `${month}-01`,
-  });
-  if (error) throw error;
-  const s = (data as { spending: { spent: number; committed: number } })
-    .spending;
-  return { spent: s.spent, committed: s.committed };
+  const { spending } = await getDashboard(month);
+  return { spent: spending.spent, committed: spending.committed };
 }
 
 /** Despesas do mês (inclui previstas) por categoria principal, em centavos. */
