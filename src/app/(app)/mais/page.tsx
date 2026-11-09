@@ -1,4 +1,5 @@
 import {
+  ChartColumnIcon,
   CalendarDaysIcon,
   ChevronRightIcon,
   HomeIcon,
@@ -21,6 +22,11 @@ const LINKS = [
   { href: "/financiamentos", label: "Financiamentos", icon: HomeIcon },
   { href: "/investimentos", label: "Investimentos", icon: TrendingUpIcon },
   { href: "/orcamento", label: "Orçamento", icon: PiggyBankIcon },
+  {
+    href: "/relatorios",
+    label: "Relatórios e exportação",
+    icon: ChartColumnIcon,
+  },
   { href: "/categorias", label: "Categorias e tags", icon: TagsIcon },
 ];
 
