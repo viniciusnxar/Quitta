@@ -5,6 +5,7 @@ import {
   LandmarkIcon,
   LayersIcon,
   PiggyBankIcon,
+  TrendingUpIcon,
   RepeatIcon,
   Repeat2Icon,
   TagsIcon,
@@ -18,6 +19,7 @@ const LINKS = [
   { href: "/assinaturas", label: "Assinaturas", icon: RepeatIcon },
   { href: "/recorrencias", label: "Salário e contas fixas", icon: Repeat2Icon },
   { href: "/financiamentos", label: "Financiamentos", icon: HomeIcon },
+  { href: "/investimentos", label: "Investimentos", icon: TrendingUpIcon },
   { href: "/orcamento", label: "Orçamento", icon: PiggyBankIcon },
   { href: "/categorias", label: "Categorias e tags", icon: TagsIcon },
 ];
