@@ -3,9 +3,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { z } from "zod";
+import { InvestmentProjection } from "@/components/investments/investment-projection";
 import { InvestmentDetail } from "@/components/investments/investment-detail";
 import { listAccounts } from "@/features/accounts/queries";
-import { getInvestment, listMovements } from "@/features/investments/queries";
+import {
+  getInvestment,
+  getLatestRates,
+  listMovements,
+} from "@/features/investments/queries";
 import {
   INVESTMENT_KIND_LABELS,
   LIQUIDITY_LABELS,
@@ -36,10 +41,11 @@ export default function InvestmentPage(
 async function Detail({ params }: PageProps<"/investimentos/[id]">) {
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
-  const [inv, movements, accounts] = await Promise.all([
+  const [inv, movements, accounts, { rates }] = await Promise.all([
     getInvestment(id),
     listMovements(id),
     listAccounts(),
+    getLatestRates(),
   ]);
   if (!inv) notFound();
 
@@ -99,6 +105,17 @@ async function Detail({ params }: PageProps<"/investimentos/[id]">) {
           </p>
         </div>
       </section>
+
+      {inv.status === "ativo" && (
+        <section className="flex flex-col gap-2">
+          <h2 className="font-medium">Projeção</h2>
+          <InvestmentProjection
+            investment={inv}
+            position={inv.position}
+            rates={rates}
+          />
+        </section>
+      )}
 
       <InvestmentDetail
         investment={inv}

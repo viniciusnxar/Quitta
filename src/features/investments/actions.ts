@@ -30,6 +30,7 @@ export async function saveInvestment(
     notes: v.notes || null,
     rate: RATE_MODES_WITH_RATE.includes(v.rate_mode) ? v.rate : null,
     liquidity_days: v.liquidity === "d_mais_n" ? v.liquidity_days : null,
+    ir_rate_override: v.tax_exempt ? null : v.ir_rate_override,
   };
 
   const supabase = await createClient();

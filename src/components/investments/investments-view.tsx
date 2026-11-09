@@ -60,6 +60,13 @@ export function InvestmentsView({
         <InvestmentList investments={active} />
       )}
 
+      <Link
+        href="/investimentos/taxas"
+        className="flex min-h-11 items-center text-sm text-muted-foreground underline"
+      >
+        Taxas de referência (CDI, Selic, IPCA, TR)
+      </Link>
+
       {closed.length > 0 && (
         <details>
           <summary className="flex min-h-11 cursor-pointer items-center text-sm text-muted-foreground">

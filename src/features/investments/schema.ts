@@ -72,6 +72,15 @@ export const RATE_MODES_WITH_RATE: RateMode[] = [
   "pos_selic",
 ];
 
+export const RATE_CODES = ["CDI", "SELIC", "IPCA", "TR"] as const;
+
+export const RATE_CODE_LABELS: Record<(typeof RATE_CODES)[number], string> = {
+  CDI: "CDI",
+  SELIC: "Selic",
+  IPCA: "IPCA (12 meses)",
+  TR: "TR",
+};
+
 export const LIQUIDITY_LABELS = {
   diaria: "Diária",
   no_vencimento: "No vencimento",
@@ -116,6 +125,8 @@ export const investmentSchema = z
     liquidity: z.enum(["diaria", "no_vencimento", "d_mais_n"]),
     liquidity_days: z.number().int().min(1).max(3650).nullable(),
     tax_exempt: z.boolean(),
+    /** Alíquota fixa de IR (%), no lugar da tabela regressiva. */
+    ir_rate_override: z.number().min(0).max(100).nullable(),
     status: z.enum(["ativo", "resgatado"]),
     notes: z.string().trim().max(500, "Use até 500 caracteres."),
   })

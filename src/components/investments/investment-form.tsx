@@ -51,6 +51,7 @@ function defaults(i: Investment | null): InvestmentInput {
       liquidity: i.liquidity,
       liquidity_days: i.liquidity_days,
       tax_exempt: i.tax_exempt,
+      ir_rate_override: i.ir_rate_override,
       status: i.status,
       notes: i.notes ?? "",
     };
@@ -67,6 +68,7 @@ function defaults(i: Investment | null): InvestmentInput {
     liquidity: "diaria",
     liquidity_days: null,
     tax_exempt: false,
+    ir_rate_override: null,
     status: "ativo",
     notes: "",
   };
@@ -95,6 +97,7 @@ export function InvestmentForm({
   });
   const rateMode = useWatch({ control, name: "rate_mode" });
   const liquidity = useWatch({ control, name: "liquidity" });
+  const taxExempt = useWatch({ control, name: "tax_exempt" });
   const hasRate = RATE_MODES_WITH_RATE.includes(rateMode);
 
   const accountItems = {
@@ -288,6 +291,22 @@ export function InvestmentForm({
           </span>
         </span>
       </label>
+
+      {!taxExempt && (
+        <label className={labelClass}>
+          <span>IR com alíquota fixa (%) {optional}</span>
+          <Input
+            inputMode="decimal"
+            placeholder="Tabela regressiva"
+            className="h-11 text-base tabular-nums"
+            aria-invalid={!!errors.ir_rate_override}
+            {...register("ir_rate_override", {
+              setValueAs: (v) => (v === "" || v == null ? null : parseRate(v)),
+            })}
+          />
+          <FieldError message={errors.ir_rate_override?.message} />
+        </label>
+      )}
 
       {investment && (
         <label className="flex min-h-11 items-center gap-3 text-sm">

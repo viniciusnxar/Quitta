@@ -1,3 +1,4 @@
+import type { RateCode, Rates } from "@/lib/finance/investments";
 import type { Tables } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
 
@@ -53,3 +54,20 @@ export async function listMovements(investmentId: string) {
 }
 
 export type Movement = Awaited<ReturnType<typeof listMovements>>[number];
+
+/** Taxa vigente de cada índice: a do usuário tem prioridade sobre a global. */
+export async function getLatestRates() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("v_latest_rates").select("*");
+  if (error) throw error;
+  const rows = data.map((r) => ({
+    code: r.code as RateCode,
+    annual_rate: r.annual_rate ?? 0,
+    reference_date: r.reference_date!,
+    is_custom: !!r.is_custom,
+  }));
+  const rates: Rates = Object.fromEntries(
+    rows.map((r) => [r.code, r.annual_rate]),
+  );
+  return { rows, rates };
+}

@@ -19,6 +19,7 @@ const cdb: InvestmentInput = {
   liquidity: "no_vencimento",
   liquidity_days: null,
   tax_exempt: false,
+  ir_rate_override: null,
   status: "ativo",
   notes: "",
 };
