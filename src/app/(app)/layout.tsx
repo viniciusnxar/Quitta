@@ -5,9 +5,8 @@ import {
   BellLink,
   NotificationBell,
 } from "@/components/notifications/notification-bell";
+import { ProfileMenuLoader } from "@/components/profile/profile-menu-loader";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Button } from "@/components/ui/button";
-import { logout } from "@/features/auth/actions";
 import { createClient } from "@/lib/supabase/server";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -24,11 +23,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <NotificationBell />
             </Suspense>
             <ThemeToggle />
-            <form action={logout}>
-              <Button type="submit" variant="ghost" className="h-11 px-3">
-                Sair
-              </Button>
-            </form>
+            <Suspense
+              fallback={
+                <div className="size-11 p-1.5" aria-hidden>
+                  <div className="size-8 animate-pulse rounded-full bg-muted" />
+                </div>
+              }
+            >
+              <ProfileMenuLoader />
+            </Suspense>
           </div>
         </header>
         {/* Espaço para a bottom nav (h-14) + safe area no mobile */}
