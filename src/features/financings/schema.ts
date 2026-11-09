@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { Constants } from "@/lib/supabase/database.types";
+import { EXTRA_STRATEGIES, type ExtraStrategy } from "@/lib/finance/financing";
 
 type Enums = typeof Constants.public.Enums;
 
@@ -91,3 +92,16 @@ export function parseRate(value: unknown): number {
     .replace(",", ".");
   return text === "" ? NaN : Number(text);
 }
+
+export const EXTRA_STRATEGY_LABELS: Record<ExtraStrategy, string> = {
+  reduzir_prazo: "Reduzir prazo",
+  reduzir_parcela: "Reduzir parcela",
+};
+
+export const extraPaymentSchema = z.object({
+  payment_date: z.iso.date("Informe a data."),
+  amount_cents: cents("Informe o valor.").positive("Informe o valor."),
+  strategy: z.enum(EXTRA_STRATEGIES),
+});
+
+export type ExtraPaymentInput = z.infer<typeof extraPaymentSchema>;

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import type { ExtraStrategy } from "@/lib/finance/financing";
 import type { Tables } from "@/lib/supabase/database.types";
 
 // Colunas de view chegam como nullable; o restante vem de financings (not null).
@@ -61,4 +62,22 @@ export async function listFinancingInstallments(
 
 export type FinancingInstallment = Awaited<
   ReturnType<typeof listFinancingInstallments>
+>[number];
+
+export async function listExtraPayments(financingId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("financing_extra_payments")
+    .select("id, payment_date, amount, strategy")
+    .eq("financing_id", financingId)
+    .order("payment_date");
+  if (error) throw error;
+  return data.map((e) => ({
+    ...e,
+    strategy: e.strategy as ExtraStrategy,
+  }));
+}
+
+export type ExtraPayment = Awaited<
+  ReturnType<typeof listExtraPayments>
 >[number];

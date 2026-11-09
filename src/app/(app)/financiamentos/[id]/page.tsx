@@ -3,11 +3,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { z } from "zod";
+import { ExtraPayments } from "@/components/financings/extra-payments";
 import { FinancingChart } from "@/components/financings/financing-chart";
 import { FinancingEditButton } from "@/components/financings/financing-edit-button";
 import { FinancingProgress } from "@/components/financings/financing-progress";
 import {
   getFinancing,
+  listExtraPayments,
   listFinancingInstallments,
 } from "@/features/financings/queries";
 import {
@@ -41,9 +43,10 @@ export default function FinancingPage(
 async function FinancingDetail({ params }: PageProps<"/financiamentos/[id]">) {
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
-  const [f, options] = await Promise.all([
+  const [f, options, extras] = await Promise.all([
     getFinancing(id),
     loadTransactionOptions(),
+    listExtraPayments(id),
   ]);
   if (!f) notFound();
   const installments = await listFinancingInstallments(
@@ -93,6 +96,8 @@ async function FinancingDetail({ params }: PageProps<"/financiamentos/[id]">) {
         </div>
         <FinancingProgress financing={f} />
       </section>
+
+      <ExtraPayments financing={f} extras={extras} />
 
       {installments.length > 0 && (
         <>
