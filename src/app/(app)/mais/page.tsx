@@ -1,4 +1,5 @@
 import {
+  CalendarDaysIcon,
   ChevronRightIcon,
   HomeIcon,
   LandmarkIcon,
@@ -11,6 +12,7 @@ import {
 import Link from "next/link";
 
 const LINKS = [
+  { href: "/calendario", label: "Calendário", icon: CalendarDaysIcon },
   { href: "/contas", label: "Contas", icon: LandmarkIcon },
   { href: "/parcelamentos", label: "Parcelamentos", icon: LayersIcon },
   { href: "/assinaturas", label: "Assinaturas", icon: RepeatIcon },
