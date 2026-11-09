@@ -1,6 +1,7 @@
 "use client";
 
 import { PlusIcon } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { ResponsiveDialog } from "@/components/responsive-dialog";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import {
 import type { TransactionOptions } from "@/features/transactions/actions";
 import { formatBRL } from "@/lib/finance/money";
 import { FinancingForm } from "./financing-form";
+import { FinancingProgress } from "./financing-progress";
 
 export function FinancingsView({
   financings,
@@ -20,15 +22,13 @@ export function FinancingsView({
   financings: Financing[];
   options: TransactionOptions;
 }) {
-  // undefined = fechado; null = novo.
-  const [editing, setEditing] = useState<Financing | null | undefined>();
-  const close = () => setEditing(undefined);
+  const [creating, setCreating] = useState(false);
 
   return (
     <>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Financiamentos</h1>
-        <Button className="h-11 gap-2" onClick={() => setEditing(null)}>
+        <Button className="h-11 gap-2" onClick={() => setCreating(true)}>
           <PlusIcon /> Novo
         </Button>
       </div>
@@ -42,49 +42,49 @@ export function FinancingsView({
         <ul className="divide-y rounded-lg border">
           {financings.map((f) => (
             <li key={f.id}>
-              <button
-                type="button"
-                onClick={() => setEditing(f)}
-                className="flex min-h-16 w-full items-center gap-3 px-3 py-2 text-left hover:bg-accent"
+              <Link
+                href={`/financiamentos/${f.id}`}
+                className="flex flex-col gap-2 px-3 py-3 hover:bg-accent"
               >
-                <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate font-medium">{f.name}</span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    {[
-                      FINANCING_KIND_LABELS[f.kind],
-                      f.institution,
-                      SYSTEM_LABELS[f.system].split(" ")[0],
-                      `${f.installments} parcelas`,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
+                <span className="flex items-center gap-3">
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate font-medium">{f.name}</span>
+                    <span className="truncate text-xs text-muted-foreground">
+                      {[
+                        FINANCING_KIND_LABELS[f.kind],
+                        f.institution,
+                        SYSTEM_LABELS[f.system].split(" ")[0],
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </span>
+                  </span>
+                  <span className="flex flex-col items-end">
+                    <span className="text-xs text-muted-foreground">
+                      Financiado
+                    </span>
+                    <span className="font-medium tabular-nums">
+                      {formatBRL(f.financed_amount)}
+                    </span>
                   </span>
                 </span>
-                <span className="flex flex-col items-end">
-                  <span className="text-xs text-muted-foreground">
-                    Financiado
-                  </span>
-                  <span className="font-medium tabular-nums">
-                    {formatBRL(f.financed_amount)}
-                  </span>
-                </span>
-              </button>
+                <FinancingProgress financing={f} />
+              </Link>
             </li>
           ))}
         </ul>
       )}
 
       <ResponsiveDialog
-        open={editing !== undefined}
-        onOpenChange={(o) => !o && close()}
-        title={editing ? "Editar financiamento" : "Novo financiamento"}
+        open={creating}
+        onOpenChange={setCreating}
+        title="Novo financiamento"
       >
-        {editing !== undefined && (
+        {creating && (
           <FinancingForm
-            key={editing?.id ?? "new"}
-            financing={editing}
+            financing={null}
             options={options}
-            onDone={close}
+            onDone={() => setCreating(false)}
           />
         )}
       </ResponsiveDialog>
