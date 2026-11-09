@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { FabNew } from "./fab-new";
-import { isActive, NAV_ITEMS } from "./nav-items";
+import { isActive, SIDEBAR_ITEMS } from "./nav-items";
 
 export function Sidebar() {
   return <SidebarView pathname={usePathname()} />;
@@ -24,7 +24,7 @@ export function SidebarView({ pathname }: { pathname: string }) {
         }
       />
       <nav className="flex flex-col gap-1">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
+        {SIDEBAR_ITEMS.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}
