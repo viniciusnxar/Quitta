@@ -4,6 +4,7 @@ import { Sidebar, SidebarView } from "@/components/layout/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/features/auth/actions";
+import { createClient } from "@/lib/supabase/server";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -31,6 +32,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <Suspense fallback={<BottomNavView pathname="" />}>
         <BottomNav />
       </Suspense>
+      <Suspense fallback={null}>
+        <GenerateRecurring />
+      </Suspense>
     </div>
   );
+}
+
+/**
+ * Gera assinaturas/recorrências dos próximos 90 dias e efetiva as automáticas que venceram.
+ * Idempotente; roda quando o layout renderiza (carga inicial), sem bloquear a página.
+ * shortcut: a página pode ler os dados antes da geração no 1º acesso do dia; mover para cron se incomodar.
+ */
+async function GenerateRecurring() {
+  const supabase = await createClient();
+  await supabase.rpc("generate_recurring");
+  return null;
 }

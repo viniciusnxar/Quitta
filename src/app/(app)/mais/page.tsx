@@ -4,6 +4,7 @@ import {
   LandmarkIcon,
   LayersIcon,
   RepeatIcon,
+  Repeat2Icon,
   TagsIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -12,6 +13,7 @@ const LINKS = [
   { href: "/contas", label: "Contas", icon: LandmarkIcon },
   { href: "/parcelamentos", label: "Parcelamentos", icon: LayersIcon },
   { href: "/assinaturas", label: "Assinaturas", icon: RepeatIcon },
+  { href: "/recorrencias", label: "Salário e contas fixas", icon: Repeat2Icon },
   { href: "/financiamentos", label: "Financiamentos", icon: HomeIcon },
   { href: "/categorias", label: "Categorias e tags", icon: TagsIcon },
 ];
