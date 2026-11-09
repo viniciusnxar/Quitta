@@ -12,6 +12,9 @@ import {
   TagsIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { Suspense } from "react";
+import { DeleteSampleButton } from "@/components/sample/delete-sample-button";
+import { hasSampleData } from "@/features/sample/queries";
 
 const LINKS = [
   { href: "/calendario", label: "Calendário", icon: CalendarDaysIcon },
@@ -48,6 +51,13 @@ export default function MorePage() {
           </li>
         ))}
       </ul>
+      <Suspense>
+        <SampleData />
+      </Suspense>
     </div>
   );
+}
+
+async function SampleData() {
+  return (await hasSampleData()) ? <DeleteSampleButton /> : null;
 }

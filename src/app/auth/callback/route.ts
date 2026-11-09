@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { seedSampleData } from "@/features/sample/queries";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
@@ -11,7 +12,10 @@ export async function GET(request: NextRequest) {
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return NextResponse.redirect(`${origin}${safeNext}`);
+    if (!error) {
+      await seedSampleData(supabase);
+      return NextResponse.redirect(`${origin}${safeNext}`);
+    }
   }
 
   return NextResponse.redirect(`${origin}/login?erro=link`);

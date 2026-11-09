@@ -803,6 +803,7 @@ export type Database = {
           full_name: string | null
           id: string
           notify_days_before: number
+          sample_seeded_at: string | null
           updated_at: string
         }
         Insert: {
@@ -812,6 +813,7 @@ export type Database = {
           full_name?: string | null
           id: string
           notify_days_before?: number
+          sample_seeded_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -821,6 +823,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           notify_days_before?: number
+          sample_seeded_at?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -934,6 +937,24 @@ export type Database = {
             referencedColumns: ["id", "user_id"]
           },
         ]
+      }
+      sample_records: {
+        Row: {
+          record_id: string
+          table_name: string
+          user_id: string
+        }
+        Insert: {
+          record_id: string
+          table_name: string
+          user_id?: string
+        }
+        Update: {
+          record_id?: string
+          table_name?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       subscription_price_changes: {
         Row: {
@@ -1714,6 +1735,7 @@ export type Database = {
     }
     Functions: {
       clamp_day: { Args: { p_day: number; p_month: string }; Returns: string }
+      delete_sample_data: { Args: never; Returns: number }
       create_installment_plan: {
         Args: {
           p_account_id?: string
@@ -1745,6 +1767,7 @@ export type Database = {
         Args: { p_financing_id: string }
         Returns: number
       }
+      seed_sample_data: { Args: never; Returns: boolean }
       generate_recurring: { Args: { p_until?: string }; Returns: number }
       get_calendar: {
         Args: { p_from: string; p_to: string }

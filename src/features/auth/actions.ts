@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { seedSampleData } from "@/features/sample/queries";
 import { createClient } from "@/lib/supabase/server";
 import { loginSchema, signupSchema, type AuthState } from "./schema";
 
@@ -33,6 +34,7 @@ export async function login(
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) return { error: authError(error.code), email };
 
+  await seedSampleData(supabase);
   redirect("/");
 }
 
@@ -62,6 +64,7 @@ export async function signup(
       email,
     };
   }
+  await seedSampleData(supabase);
   redirect("/");
 }
 
