@@ -1,6 +1,10 @@
 import { Suspense } from "react";
 import { BottomNav, BottomNavView } from "@/components/layout/bottom-nav";
 import { Sidebar, SidebarView } from "@/components/layout/sidebar";
+import {
+  BellLink,
+  NotificationBell,
+} from "@/components/notifications/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/features/auth/actions";
@@ -16,6 +20,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <header className="sticky top-0 z-30 flex min-h-14 items-center justify-between border-b bg-background px-4 pt-[env(safe-area-inset-top)]">
           <span className="text-lg font-semibold md:invisible">Quitta</span>
           <div className="flex items-center gap-1">
+            <Suspense fallback={<BellLink count={0} />}>
+              <NotificationBell />
+            </Suspense>
             <ThemeToggle />
             <form action={logout}>
               <Button type="submit" variant="ghost" className="h-11 px-3">

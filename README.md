@@ -54,6 +54,23 @@ Não use `supabase start`, `supabase db reset` nem `supabase db diff` — exigem
 Para mudar o schema: `npx supabase migration new <nome>` → editar o SQL → `npx supabase db push`.
 Nunca edite uma migration já aplicada; crie uma nova.
 
+## Mensagens e alertas (pg_cron)
+
+Os avisos da central de mensagens (faturas e contas vencendo, assinaturas renovando, parcelas de
+financiamento, limite do cartão ≥ 80%) são criados uma vez por dia pela função
+`private.generate_notifications()`. Sem o agendamento, a central fica vazia.
+
+1. No painel: **Database → Extensions** → ative `pg_cron`.
+2. No **SQL Editor**, agende (11:00 UTC = 08:00 em Brasília):
+   ```sql
+   select cron.schedule('notificacoes-diarias', '0 11 * * *',
+     $$select private.generate_notifications()$$);
+   ```
+3. Para testar na hora: `select private.generate_notifications();`
+   Para conferir: `select * from cron.job;` · Para remover: `select cron.unschedule('notificacoes-diarias');`
+
+A antecedência dos avisos (padrão 3 dias) é ajustada por cada usuário em **Mensagens**.
+
 ## Deploy
 
 Importe o repositório na Vercel e configure as mesmas variáveis de ambiente.
