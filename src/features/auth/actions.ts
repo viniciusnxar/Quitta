@@ -73,3 +73,13 @@ export async function logout() {
   await supabase.auth.signOut();
   redirect("/login");
 }
+
+export async function loginWithGoogle() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: `${process.env.SITE_URL}/auth/callback` },
+  });
+  if (error || !data.url) redirect("/login?erro=google");
+  redirect(data.url);
+}
