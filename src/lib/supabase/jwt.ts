@@ -3,8 +3,15 @@ import { importJWK, SignJWT, type JWK } from "jose";
 import type { Database } from "./database.types";
 
 let key: ReturnType<typeof importJWK> | undefined;
-const jwk = () => JSON.parse(process.env.SUPABASE_JWT_PRIVATE_KEY!) as JWK;
-
+function jwk() {
+  try {
+    return JSON.parse(process.env.SUPABASE_JWT_PRIVATE_KEY!) as JWK;
+  } catch {
+    throw new Error(
+      "SUPABASE_JWT_PRIVATE_KEY precisa ser o JSON da chave privada (JWK), não o ID da chave.",
+    );
+  }
+}
 /**
  * JWT curto que o Supabase aceita como usuário "authenticated": a chave
  * privada foi importada em Settings > JWT Keys, então auth.uid() = userId.
