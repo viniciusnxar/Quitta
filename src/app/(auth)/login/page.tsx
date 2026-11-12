@@ -9,13 +9,14 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
   const [state, action, pending] = useActionState(login, {});
   const params = use(searchParams);
   const linkError =
-    params.erro === "link"
-      ? "Link inválido ou expirado. Entre ou cadastre-se de novo."
-      : params.erro === "google"
-        ? "Não foi possível entrar com o Google. Tente de novo."
+    params.erro === "google"
+      ? "Não foi possível entrar com o Google. Tente de novo."
+      : params.error // link de e-mail do Better Auth inválido/expirado
+        ? "Link inválido ou expirado. Entre ou cadastre-se de novo."
         : undefined;
-  const deleted =
-    params.conta === "excluida" && !state.error
+  const deleted = state.error
+    ? undefined
+    : params.conta === "excluida"
       ? "Sua conta e todos os dados foram excluídos."
       : undefined;
 

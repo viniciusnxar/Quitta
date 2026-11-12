@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { getSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export async function markRead(id: string): Promise<{ error?: string }> {
@@ -35,8 +36,7 @@ export async function setNotifyDaysBefore(
   const parsed = z.number().int().min(0).max(30).safeParse(days);
   if (!parsed.success) return { error: "Use de 0 a 30 dias." };
   const supabase = await createClient();
-  const { data: auth } = await supabase.auth.getClaims();
-  const userId = auth?.claims.sub;
+  const userId = (await getSession())?.user.id;
   if (!userId) return { error: "Sessão expirada." };
   const { error } = await supabase
     .from("profiles")

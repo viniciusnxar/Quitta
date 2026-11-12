@@ -1,28 +1,16 @@
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { getSession } from "@/lib/auth";
 import type { Database } from "./database.types";
+import { clientFor } from "./jwt";
 
+export { clientFor };
+
+/** Cliente com a sessão do Better Auth; sem sessão, o RLS não devolve nada. */
 export async function createClient() {
-  const cookieStore = await cookies();
-
-  return createServerClient<Database>(
+  const session = await getSession();
+  if (session) return clientFor(session.user);
+  return createSupabaseClient<Database>(
     process.env.SUPABASE_URL!,
     process.env.SUPABASE_PUBLISHABLE_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options),
-            );
-          } catch {
-            // Chamado de um Server Component: o proxy já renova a sessão.
-          }
-        },
-      },
-    },
   );
 }

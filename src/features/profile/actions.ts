@@ -2,6 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { APIError } from "better-auth/api";
+import { headers } from "next/headers";
+import { auth, getSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import {
   AVATAR_MAX_BYTES,
@@ -15,8 +18,8 @@ type Result = { error?: string; message?: string };
 
 async function session() {
   const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  return { supabase, claims: data?.claims ?? null };
+  const user = (await getSession())?.user;
+  return { supabase, claims: user ? { sub: user.id, email: user.email } : null };
 }
 
 export async function updateProfile(input: {
@@ -92,25 +95,23 @@ export async function removeAvatar(): Promise<Result> {
   return {};
 }
 
-/** O Supabase envia link de confirmação; o e-mail só muda depois do clique. */
+/** O Better Auth envia link de confirmação; o e-mail só muda depois do clique. */
 export async function changeEmail(input: { email: string }): Promise<Result> {
   const parsed = emailSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
-  const { supabase, claims } = await session();
+  const { claims } = await session();
   if (!claims) return { error: "Sessão expirada." };
   if (parsed.data.email.toLowerCase() === claims.email?.toLowerCase())
     return { error: "Este já é o seu e-mail." };
-  const { error } = await supabase.auth.updateUser(
-    { email: parsed.data.email },
-    { emailRedirectTo: `${process.env.SITE_URL}/auth/callback` },
-  );
-  if (error)
-    return {
-      error:
-        error.code === "email_exists"
-          ? "Já existe uma conta com este e-mail."
-          : "Não foi possível alterar o e-mail. Tente de novo.",
-    };
+  try {
+    // Link vai para o novo e-mail; se ele já tiver conta, nada acontece (sem vazar isso).
+    await auth.api.changeEmail({
+      body: { newEmail: parsed.data.email, callbackURL: "/" },
+      headers: await headers(),
+    });
+  } catch {
+    return { error: "Não foi possível alterar o e-mail. Tente de novo." };
+  }
   return {
     message:
       "Enviamos um link de confirmação. O e-mail muda depois que você confirmar.",
@@ -125,23 +126,24 @@ export async function changePassword(input: {
 }): Promise<Result> {
   const parsed = passwordSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
-  const { supabase, claims } = await session();
-  if (!claims?.email) return { error: "Sessão expirada." };
-  const { error: authError } = await supabase.auth.signInWithPassword({
-    email: claims.email,
-    password: parsed.data.current,
-  });
-  if (authError) return { error: "Senha atual incorreta." };
-  const { error } = await supabase.auth.updateUser({
-    password: parsed.data.password,
-  });
-  if (error)
+  try {
+    await auth.api.changePassword({
+      body: {
+        currentPassword: parsed.data.current,
+        newPassword: parsed.data.password,
+      },
+      headers: await headers(),
+    });
+  } catch (e) {
+    if (!(e instanceof APIError)) throw e;
+    if (e.status === "UNAUTHORIZED") return { error: "Sessão expirada." };
     return {
       error:
-        error.code === "weak_password"
-          ? "Senha muito fraca. Use uma senha mais forte."
+        e.body?.code === "INVALID_PASSWORD"
+          ? "Senha atual incorreta."
           : "Não foi possível alterar a senha.",
     };
+  }
   return { message: "Senha alterada." };
 }
 
@@ -161,6 +163,7 @@ export async function deleteAccount(input: { email: string }): Promise<Result> {
   const { error } = await supabase.rpc("delete_my_account");
   if (error)
     return { error: "Não foi possível excluir a conta. Tente de novo." };
-  await supabase.auth.signOut();
+  // A sessão já foi apagada em cascata; signOut só limpa os cookies.
+  await auth.api.signOut({ headers: await headers() }).catch(() => {});
   redirect("/login?conta=excluida");
 }

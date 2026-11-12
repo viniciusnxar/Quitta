@@ -1,22 +1,25 @@
 "use server";
 
+import { APIError } from "better-auth/api";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { seedSampleData } from "@/features/sample/queries";
-import { createClient } from "@/lib/supabase/server";
+import { auth } from "@/lib/auth";
 import { loginSchema, signupSchema, type AuthState } from "./schema";
 
 const RATE_LIMIT = "Muitas tentativas. Aguarde alguns minutos e tente de novo.";
 const AUTH_ERRORS: Record<string, string> = {
-  invalid_credentials: "E-mail ou senha incorretos.",
-  email_not_confirmed: "Confirme seu e-mail antes de entrar.",
-  user_already_exists: "Já existe uma conta com este e-mail.",
-  email_exists: "Já existe uma conta com este e-mail.",
-  weak_password: "Senha muito fraca. Use uma senha mais forte.",
-  over_email_send_rate_limit: RATE_LIMIT,
-  over_request_rate_limit: RATE_LIMIT,
+  INVALID_EMAIL_OR_PASSWORD: "E-mail ou senha incorretos.",
+  EMAIL_NOT_VERIFIED: "Confirme seu e-mail antes de entrar.",
+  USER_ALREADY_EXISTS: "Já existe uma conta com este e-mail.",
+  USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: "Já existe uma conta com este e-mail.",
+  PASSWORD_TOO_SHORT: "A senha precisa ter ao menos 8 caracteres.",
+  PASSWORD_TOO_LONG: "Senha longa demais.",
 };
 
-function authError(code: string | undefined) {
+function authError(e: unknown) {
+  if (!(e instanceof APIError)) throw e;
+  if (e.statusCode === 429) return RATE_LIMIT;
+  const code = e.body?.code;
   return (
     (code && AUTH_ERRORS[code]) || "Não foi possível concluir. Tente de novo."
   );
@@ -30,11 +33,14 @@ export async function login(
   const parsed = loginSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message, email };
 
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
-  if (error) return { error: authError(error.code), email };
-
-  await seedSampleData(supabase);
+  try {
+    await auth.api.signInEmail({
+      body: { ...parsed.data, callbackURL: "/" },
+      headers: await headers(),
+    });
+  } catch (e) {
+    return { error: authError(e), email };
+  }
   redirect("/");
 }
 
@@ -47,39 +53,36 @@ export async function signup(
   if (!parsed.success) return { error: parsed.error.issues[0].message, email };
 
   const { full_name, ...credentials } = parsed.data;
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp({
-    ...credentials,
-    options: {
-      data: { full_name },
-      emailRedirectTo: `${process.env.SITE_URL}/auth/callback`,
-    },
-  });
-  if (error) return { error: authError(error.code), email };
-
-  // Sem sessão = confirmação de e-mail ativada no projeto.
-  if (!data.session) {
-    return {
-      message: "Enviamos um link de confirmação para o seu e-mail.",
-      email,
-    };
+  try {
+    const { token } = await auth.api.signUpEmail({
+      body: { ...credentials, name: full_name, callbackURL: "/login" },
+      headers: await headers(),
+    });
+    // Sem sessão = confirmação de e-mail obrigatória.
+    if (!token)
+      return {
+        message: "Enviamos um link de confirmação para o seu e-mail.",
+        email,
+      };
+  } catch (e) {
+    return { error: authError(e), email };
   }
-  await seedSampleData(supabase);
   redirect("/");
 }
 
 export async function logout() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
+  await auth.api.signOut({ headers: await headers() });
   redirect("/login");
 }
 
 export async function loginWithGoogle() {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo: `${process.env.SITE_URL}/auth/callback` },
+  const { url } = await auth.api.signInSocial({
+    body: {
+      provider: "google",
+      callbackURL: "/",
+      errorCallbackURL: "/login?erro=google",
+    },
+    headers: await headers(),
   });
-  if (error || !data.url) redirect("/login?erro=google");
-  redirect(data.url);
+  redirect(url ?? "/login?erro=google");
 }

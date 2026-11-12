@@ -5,6 +5,7 @@ import { z } from "zod";
 import { today } from "@/lib/finance/dates";
 import type { RateCode } from "@/lib/finance/investments";
 import { RATE_CODES } from "./schema";
+import { getSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 const rateSchema = z.object({
@@ -24,8 +25,7 @@ export async function saveRate(
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const supabase = await createClient();
   // index_rates.user_id não tem default (null = taxa global).
-  const { data: auth } = await supabase.auth.getClaims();
-  const userId = auth?.claims.sub;
+  const userId = (await getSession())?.user.id;
   if (!userId) return { error: "Sessão expirada." };
   const { error } = await supabase.from("index_rates").upsert(
     {

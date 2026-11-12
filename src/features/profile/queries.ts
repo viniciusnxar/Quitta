@@ -1,25 +1,24 @@
+import { getSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 /** Nome, e-mail e foto de quem está logado (null sem sessão). */
 export async function getProfile() {
+  const session = await getSession();
+  if (!session) return null;
+  const { user } = session;
   const supabase = await createClient();
-  const { data: auth } = await supabase.auth.getClaims();
-  const claims = auth?.claims;
-  if (!claims) return null;
   // "*": não quebra se a coluna avatar_url ainda não existir (migration pendente).
   const { data, error } = await supabase
     .from("profiles")
     .select("*")
-    .eq("id", claims.sub)
+    .eq("id", user.id)
     .maybeSingle();
   if (error) console.error("[perfil]", error.message);
-  // Reserva: o nome informado no cadastro fica no user_metadata do token.
-  const metaName = (claims.user_metadata as { full_name?: string } | undefined)
-    ?.full_name;
   return {
-    id: claims.sub,
-    email: claims.email ?? "",
-    full_name: data?.full_name || metaName || "",
+    id: user.id,
+    email: user.email,
+    // Reserva: o nome informado no cadastro fica no usuário do Better Auth.
+    full_name: data?.full_name || user.name || "",
     avatar_url: data?.avatar_url ?? null,
   };
 }
