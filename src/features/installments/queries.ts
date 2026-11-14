@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 
 const SELECT = `id, description, total_amount, installment_amount, installment_count,
   paid_installments, remaining_installments, remaining_amount, next_date, is_active, notes,
+  card_id, account_id, category_id, start_installment, first_date,
   card:credit_cards!installment_plans_card_id_user_id_fkey(name),
   account:accounts!installment_plans_account_id_user_id_fkey(name),
   category:categories!installment_plans_category_id_user_id_fkey(name, color)`;

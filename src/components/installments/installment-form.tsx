@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
@@ -17,8 +18,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { categoryItems } from "@/features/categories/items";
-import { createInstallmentPlan } from "@/features/installments/actions";
+import {
+  createInstallmentPlan,
+  updateInstallmentPlan,
+} from "@/features/installments/actions";
 import { previewInstallments } from "@/features/installments/preview";
+import type { InstallmentPlan } from "@/features/installments/queries";
 import {
   installmentSchema,
   type InstallmentInput,
@@ -33,12 +38,15 @@ const toggleClass =
   "flex h-11 flex-1 items-center justify-center rounded-md border text-sm aria-pressed:border-foreground aria-pressed:bg-accent aria-pressed:font-medium";
 
 export function InstallmentForm({
+  plan,
   options,
   onDone,
 }: {
+  plan?: InstallmentPlan;
   options: TransactionOptions;
   onDone: () => void;
 }) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const { accounts, cards, categories } = options;
   const {
@@ -49,19 +57,32 @@ export function InstallmentForm({
     formState: { errors },
   } = useForm<InstallmentInput>({
     resolver: zodResolver(installmentSchema),
-    defaultValues: {
-      description: "",
-      mode: "total",
-      amount_cents: 0,
-      count: 10,
-      start: 1,
-      first_date: today(),
-      // Parcelamento costuma ser no cartão; conta = carnê/boleto.
-      card_id: cards[0]?.id ?? null,
-      account_id: cards[0] ? null : (accounts[0]?.id ?? null),
-      category_id: null,
-      notes: "",
-    },
+    defaultValues: plan
+      ? {
+          description: plan.description,
+          mode: "total",
+          amount_cents: Math.round(plan.total_amount * 100),
+          count: plan.installment_count,
+          start: plan.start_installment ?? 1,
+          first_date: plan.first_date ?? today(),
+          card_id: plan.card_id,
+          account_id: plan.account_id,
+          category_id: plan.category_id,
+          notes: plan.notes ?? "",
+        }
+      : {
+          description: "",
+          mode: "total",
+          amount_cents: 0,
+          count: 10,
+          start: 1,
+          first_date: today(),
+          // Parcelamento costuma ser no cartão; conta = carnê/boleto.
+          card_id: cards[0]?.id ?? null,
+          account_id: cards[0] ? null : (accounts[0]?.id ?? null),
+          category_id: null,
+          notes: "",
+        },
   });
   const [mode, amountCents, count, start, firstDate, cardId] = useWatch({
     control,
@@ -105,6 +126,15 @@ export function InstallmentForm({
 
   const onSubmit = handleSubmit((values) =>
     startTransition(async () => {
+      if (plan) {
+        const { id, error } = await updateInstallmentPlan(plan.id, values);
+        if (error) return void toast.error(error);
+        toast.success("Parcelamento atualizado.");
+        onDone();
+        // Editar recria o plano com outro id.
+        router.replace(`/parcelamentos/${id}`);
+        return;
+      }
       const { error } = await createInstallmentPlan(values);
       if (error) return void toast.error(error);
       toast.success("Parcelamento criado.");
@@ -119,7 +149,7 @@ export function InstallmentForm({
         <Input
           className="h-11 text-base"
           placeholder="Ex.: Geladeira"
-          autoFocus
+          autoFocus={!plan}
           aria-invalid={!!errors.description}
           {...register("description")}
         />
@@ -316,7 +346,11 @@ export function InstallmentForm({
       </label>
 
       <Button type="submit" className="h-11" disabled={pending}>
-        {pending ? "Criando..." : "Criar parcelamento"}
+        {pending
+          ? "Salvando..."
+          : plan
+            ? "Salvar alterações"
+            : "Criar parcelamento"}
       </Button>
     </form>
   );

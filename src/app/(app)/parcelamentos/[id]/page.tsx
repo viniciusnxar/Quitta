@@ -3,9 +3,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { z } from "zod";
+import { InstallmentActions } from "@/components/installments/installment-actions";
 import { InstallmentProgress } from "@/components/installments/installment-progress";
 import { TransactionList } from "@/components/transactions/transaction-list";
 import { getInstallmentPlan } from "@/features/installments/queries";
+import { loadTransactionOptions } from "@/features/transactions/actions";
 import { listTransactionsOf } from "@/features/transactions/queries";
 import { formatBRL } from "@/lib/finance/money";
 
@@ -30,9 +32,10 @@ export default function InstallmentPage(
 async function PlanDetail({ params }: PageProps<"/parcelamentos/[id]">) {
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
-  const [plan, items] = await Promise.all([
+  const [plan, items, options] = await Promise.all([
     getInstallmentPlan(id),
     listTransactionsOf("installment_plan_id", id),
+    loadTransactionOptions(),
   ]);
   if (!plan) notFound();
 
@@ -66,6 +69,7 @@ async function PlanDetail({ params }: PageProps<"/parcelamentos/[id]">) {
         {plan.notes && (
           <p className="text-sm text-muted-foreground">{plan.notes}</p>
         )}
+        <InstallmentActions plan={plan} options={options} />
       </section>
 
       <h2 className="font-medium">Parcelas</h2>
