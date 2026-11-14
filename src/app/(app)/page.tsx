@@ -50,7 +50,12 @@ async function Overview({ searchParams }: PageProps<"/">) {
       <Balance d={d} />
       <div className="grid gap-4 md:grid-cols-2">
         <CashFlow flow={d.cash_flow} />
-        <Spending s={d.spending} month={month} />
+        <Spending
+          s={d.spending}
+          month={month}
+          installments={d.installments.month_amount}
+          subscriptions={d.subscriptions.monthly_total}
+        />
         <Cards cards={d.cards} />
         <div className="grid grid-cols-2 gap-4">
           <Tile
@@ -187,14 +192,32 @@ function CashFlow({ flow: f }: { flow: Dashboard["cash_flow"] }) {
   );
 }
 
-function Spending({ s, month }: { s: Dashboard["spending"]; month: string }) {
+function Spending({
+  s,
+  month,
+  installments,
+  subscriptions,
+}: {
+  s: Dashboard["spending"];
+  month: string;
+  installments: number;
+  subscriptions: number;
+}) {
   const href = `/orcamento?mes=${month}`;
   if (s.budget == null)
     return (
       <Section title="Restante do mês" href={href}>
+        <p className="text-2xl font-semibold tabular-nums">
+          {formatBRL(installments + subscriptions)}
+          <span className="ml-1 text-sm font-normal text-muted-foreground">
+            fixos no mês
+          </span>
+        </p>
+        <p className="text-xs text-muted-foreground tabular-nums">
+          Parcelamentos {formatBRL(installments)} · assinaturas{" "}
+          {formatBRL(subscriptions)}
+        </p>
         <p className="text-sm text-muted-foreground">
-          Gasto no mês (com previstos):{" "}
-          <span className="tabular-nums">{formatBRL(s.committed)}</span>.{" "}
           <Link href={href} className="underline">
             Defina um limite
           </Link>{" "}
